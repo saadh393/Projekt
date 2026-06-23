@@ -38,7 +38,12 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}>
+    <div
+      className="relative flex h-screen overflow-hidden"
+      style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}
+    >
+      <div className="titlebar" data-tauri-drag-region />
+
       <Sidebar categories={categories} projects={projects} />
       <ProjectList projects={projects} categories={categories} launchers={launchers} />
       {isNarrow ? null : (

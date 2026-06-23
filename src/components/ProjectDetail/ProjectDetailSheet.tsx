@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useMountTransition } from "../../hooks/useMountTransition";
 import type { AppLauncher, Category, CommandTemplate, Project } from "../../lib/types";
@@ -20,9 +21,14 @@ export function ProjectDetailSheet({
   commandTemplates,
   onClose,
 }: ProjectDetailSheetProps) {
-  const { render, state } = useMountTransition(open && Boolean(project), 280);
+  const { render, state } = useMountTransition(open, 360);
+  const [latest, setLatest] = useState<Project | null>(project);
 
-  if (!render || !project) {
+  useEffect(() => {
+    if (project) setLatest(project);
+  }, [project]);
+
+  if (!render || !latest) {
     return null;
   }
 
@@ -40,7 +46,7 @@ export function ProjectDetailSheet({
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">
           <ProjectDetail
-            project={project}
+            project={latest}
             categories={categories}
             launchers={launchers}
             commandTemplates={commandTemplates}

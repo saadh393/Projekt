@@ -26,7 +26,7 @@ export function ProjectDetail({
 
   const shell = embedded
     ? "flex h-full min-h-0 w-full flex-col"
-    : "scroll-shell hidden h-screen w-[360px] shrink-0 flex-col overflow-hidden border-l lg:flex";
+    : "scroll-shell hidden h-screen w-[360px] shrink-0 flex-col overflow-hidden border-l pt-7 lg:flex";
 
   const shellStyle = embedded
     ? undefined
@@ -39,11 +39,9 @@ export function ProjectDetail({
 
   return (
     <section className={shell} style={shellStyle}>
-      {embedded ? null : <div className="titlebar" data-tauri-drag-region />}
-
       {!project ? (
         <div
-          className="no-drag flex flex-1 flex-col items-center justify-center px-8 text-center text-[13px]"
+          className="flex flex-1 flex-col items-center justify-center px-8 text-center text-[13px]"
           style={{ color: "var(--text-tertiary)" }}
         >
           <div
@@ -55,7 +53,7 @@ export function ProjectDetail({
           <span style={{ color: "var(--text-secondary)" }}>Select a project to see details</span>
         </div>
       ) : (
-        <div className="no-drag min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-1">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-2">
           <div className="mb-4 flex items-start gap-3">
             <span
               className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"

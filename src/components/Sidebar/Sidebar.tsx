@@ -30,7 +30,7 @@ export function Sidebar({ categories, projects }: SidebarProps) {
 
   return (
     <aside
-      className="flex h-screen w-56 shrink-0 flex-col"
+      className="flex h-screen w-56 shrink-0 flex-col pt-7"
       style={{
         background: "var(--bg-sidebar)",
         backdropFilter: "saturate(180%) blur(24px)",
@@ -38,9 +38,7 @@ export function Sidebar({ categories, projects }: SidebarProps) {
         borderRight: "1px solid var(--border-subtle)",
       }}
     >
-      <div className="titlebar" data-tauri-drag-region />
-
-      <div className="no-drag flex items-center gap-2 px-3 pb-3 pt-1">
+      <div className="flex items-center gap-2 px-3 pb-3 pt-2">
         <img src="/logo.png" alt="Projekt" className="h-6 w-6 rounded-md shadow-sm" />
         <span className="text-[14px] font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
           Projekt
@@ -65,7 +63,7 @@ export function Sidebar({ categories, projects }: SidebarProps) {
         </button>
       </div>
 
-      <div className="mt-3 flex items-center justify-between px-3 pb-1 no-drag">
+      <div className="mt-3 flex items-center justify-between px-3 pb-1">
         <span
           className="text-[11px] font-semibold uppercase tracking-wider"
           style={{ color: "var(--text-tertiary)" }}

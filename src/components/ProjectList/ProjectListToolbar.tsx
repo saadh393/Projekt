@@ -22,7 +22,7 @@ export function ProjectListToolbar({
   onAddProject,
 }: ProjectListToolbarProps) {
   return (
-    <div className="no-drag flex items-center gap-2 px-6 pb-3">
+    <div className="flex items-center gap-2 px-6 pb-3">
       <label className="relative min-w-0 flex-1">
         <Search
           size={14}

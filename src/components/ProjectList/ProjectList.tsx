@@ -50,12 +50,10 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
 
   return (
     <main
-      className="scroll-shell flex h-screen min-w-0 flex-1 flex-col overflow-hidden"
+      className="scroll-shell flex h-screen min-w-0 flex-1 flex-col overflow-hidden pt-7"
       style={{ background: "var(--bg-content)" }}
     >
-      <div className="titlebar" data-tauri-drag-region />
-
-      <div className="no-drag flex items-end justify-between px-6 pt-1 pb-3">
+      <div className="flex items-end justify-between px-6 pt-2 pb-3">
         <div>
           <h1 className="text-[20px] font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
             {heading}

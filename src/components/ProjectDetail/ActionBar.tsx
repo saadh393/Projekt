@@ -10,7 +10,7 @@ type ActionBarProps = {
 
 const hardcodedActions = [
   { id: "finder", label: "Finder", icon: "/finder.svg" },
-  { id: "vscode", label: "VS Code", icon: "/vscode.svg" },
+  { id: "vscode", label: "Code", icon: "/vscode.svg" },
   { id: "terminal", label: "Terminal", icon: "/terminal.svg" },
 ] as const;
 
@@ -24,29 +24,20 @@ export function ActionBar({ project, launchers }: ActionBarProps) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {hardcodedActions.map((action) => (
         <button
           key={action.id}
           type="button"
           onClick={handlers[action.id]}
-          className="group flex flex-col items-center justify-center gap-1.5 rounded-[12px] border bg-white px-3 py-2.5 text-[11px] font-medium"
+          className="inline-flex h-8 items-center gap-1.5 rounded-[8px] border bg-white px-2.5 text-[12px] font-medium"
           style={{
             borderColor: "var(--border-subtle)",
-            color: "var(--text-secondary)",
-            width: 72,
-            transition:
-              "background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 140ms var(--ease-out)",
+            color: "var(--text-primary)",
           }}
           title={`Open in ${action.label}`}
         >
-          <img
-            src={action.icon}
-            alt=""
-            aria-hidden
-            className="h-7 w-7"
-            style={{ pointerEvents: "none" }}
-          />
+          <img src={action.icon} alt="" aria-hidden className="h-4 w-4" />
           <span>{action.label}</span>
         </button>
       ))}
@@ -55,21 +46,20 @@ export function ActionBar({ project, launchers }: ActionBarProps) {
           key={launcher.id}
           type="button"
           onClick={() => openWithLauncher.mutate({ projectId: project.id, launcherId: launcher.id })}
-          className="flex flex-col items-center justify-center gap-1.5 rounded-[12px] border bg-white px-3 py-2.5 text-[11px] font-medium"
+          className="inline-flex h-8 items-center gap-1.5 rounded-[8px] border bg-white px-2.5 text-[12px] font-medium"
           style={{
             borderColor: "var(--border-subtle)",
-            color: "var(--text-secondary)",
-            width: 72,
+            color: "var(--text-primary)",
           }}
           title={launcher.appPath}
         >
           <span
-            className="flex h-7 w-7 items-center justify-center rounded-[8px]"
+            className="flex h-4 w-4 items-center justify-center rounded-[4px]"
             style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
           >
-            <MonitorUp size={16} />
+            <MonitorUp size={11} />
           </span>
-          <span className="line-clamp-1 max-w-[60px] text-center">{launcher.label}</span>
+          <span className="truncate max-w-[120px]">{launcher.label}</span>
         </button>
       ))}
     </div>
