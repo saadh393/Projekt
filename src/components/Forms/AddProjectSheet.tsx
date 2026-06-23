@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpen, X } from "lucide-react";
 import { useCreateProject, useUpdateProject } from "../../hooks/useProjects";
+import { useMountTransition } from "../../hooks/useMountTransition";
 import { emptyProjectDraft, projectAccentColors } from "../../lib/constants";
 import { formatTags, parseTags, pathBasename } from "../../lib/formUtils";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
@@ -21,22 +22,10 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
   const editingProjectId = useProjectUiStore((state) => state.editingProjectId);
   const [draft, setDraft] = useState<ProjectDraft>(emptyProjectDraft);
   const [tags, setTags] = useState("");
-  const [render, setRender] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { render, state } = useMountTransition(isOpen, 320);
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const editingProject = projects.find((project) => project.id === editingProjectId) ?? null;
-
-  useEffect(() => {
-    if (isOpen) {
-      setRender(true);
-      const id = requestAnimationFrame(() => setMounted(true));
-      return () => cancelAnimationFrame(id);
-    }
-    setMounted(false);
-    const timer = window.setTimeout(() => setRender(false), 300);
-    return () => window.clearTimeout(timer);
-  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -112,8 +101,6 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
   if (!render) {
     return null;
   }
-
-  const state = mounted ? "open" : "closed";
 
   return (
     <>

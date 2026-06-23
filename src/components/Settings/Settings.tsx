@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { cx } from "../../lib/cx";
+import { useMountTransition } from "../../hooks/useMountTransition";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import { CommandTemplatesTab } from "./CommandTemplatesTab";
 import { GeneralTab } from "./GeneralTab";
@@ -17,25 +17,11 @@ export function Settings() {
   const tab = useProjectUiStore((state) => state.settingsTab);
   const setOpen = useProjectUiStore((state) => state.setSettingsOpen);
   const setTab = useProjectUiStore((state) => state.setSettingsTab);
-  const [render, setRender] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setRender(true);
-      const id = requestAnimationFrame(() => setMounted(true));
-      return () => cancelAnimationFrame(id);
-    }
-    setMounted(false);
-    const timer = window.setTimeout(() => setRender(false), 220);
-    return () => window.clearTimeout(timer);
-  }, [isOpen]);
+  const { render, state } = useMountTransition(isOpen, 220);
 
   if (!render) {
     return null;
   }
-
-  const state = mounted ? "open" : "closed";
 
   return (
     <div className="modal-backdrop" data-state={state} onClick={() => setOpen(false)}>

@@ -76,9 +76,23 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
         onAddProject={() => setProjectSheetOpen(true)}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            setSelectedProjectId(null);
+          }
+        }}
+      >
         {sorted.length ? (
-          <div className="list-stagger flex flex-col">
+          <div
+            className="list-stagger flex flex-col"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setSelectedProjectId(null);
+              }
+            }}
+          >
             {sorted.map((project) => (
               <ProjectCard
                 key={project.id}

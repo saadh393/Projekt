@@ -124,14 +124,18 @@ select {
 
 .field {
   width: 100%;
-  height: 28px;
-  padding: 0 8px;
+  height: 30px;
+  padding: 0 10px;
   border-radius: var(--radius-sm);
   background: #ffffff;
   border: 1px solid var(--border-strong);
   font-size: 13px;
   color: var(--text-primary);
   transition: border-color 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
+}
+
+.field-with-icon {
+  padding-left: 30px;
 }
 
 .field:focus {
@@ -157,7 +161,7 @@ select {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 28px;
+  height: 30px;
   padding: 0 12px;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -252,7 +256,14 @@ select {
   border: none;
   width: 100%;
   cursor: default;
-  transition: background-color 120ms var(--ease-out);
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.row:active:not(:disabled) {
+  transform: scale(0.99);
 }
 
 .row:hover {
@@ -280,7 +291,8 @@ select {
   z-index: 40;
   background: var(--bg-overlay);
   opacity: 0;
-  transition: opacity 200ms var(--ease-out);
+  transition: opacity 260ms var(--ease-out);
+  will-change: opacity;
 }
 
 .sheet-backdrop[data-state="open"] {
@@ -300,12 +312,17 @@ select {
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
-  transition: transform 280ms var(--ease-drawer);
+  transition: transform 360ms var(--ease-drawer);
   will-change: transform;
 }
 
 .sheet-panel[data-state="open"] {
   transform: translateX(0);
+}
+
+.sheet-panel[data-state="closed"] {
+  transform: translateX(100%);
+  transition: transform 260ms var(--ease-out);
 }
 
 .modal-backdrop {

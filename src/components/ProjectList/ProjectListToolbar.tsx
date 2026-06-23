@@ -22,19 +22,17 @@ export function ProjectListToolbar({
   onAddProject,
 }: ProjectListToolbarProps) {
   return (
-    <div
-      className="no-drag flex items-center gap-2 px-6 pb-3"
-    >
+    <div className="no-drag flex items-center gap-2 px-6 pb-3">
       <label className="relative min-w-0 flex-1">
         <Search
-          size={13}
+          size={14}
           style={{ color: "var(--text-tertiary)" }}
-          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
         />
         <input
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="field pl-7"
+          className="field field-with-icon"
           placeholder="Search projects, tags, paths"
         />
       </label>
@@ -43,8 +41,7 @@ export function ProjectListToolbar({
         <select
           value={sortMode}
           onChange={(event) => onSortChange(event.target.value as SortMode)}
-          className="field cursor-default pr-7 appearance-none"
-          style={{ paddingLeft: 10 }}
+          className="field cursor-default appearance-none pr-7"
         >
           {Object.entries(sortLabels).map(([value, label]) => (
             <option key={value} value={value}>

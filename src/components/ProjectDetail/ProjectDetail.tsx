@@ -11,6 +11,7 @@ type ProjectDetailProps = {
   categories: Category[];
   launchers: AppLauncher[];
   commandTemplates: CommandTemplate[];
+  embedded?: boolean;
 };
 
 export function ProjectDetail({
@@ -18,21 +19,27 @@ export function ProjectDetail({
   categories,
   launchers,
   commandTemplates,
+  embedded = false,
 }: ProjectDetailProps) {
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
   const { hideProject } = useProjectActions();
 
-  return (
-    <section
-      className="scroll-shell hidden h-screen w-[360px] shrink-0 flex-col overflow-hidden border-l lg:flex"
-      style={{
+  const shell = embedded
+    ? "flex h-full min-h-0 w-full flex-col"
+    : "scroll-shell hidden h-screen w-[360px] shrink-0 flex-col overflow-hidden border-l lg:flex";
+
+  const shellStyle = embedded
+    ? undefined
+    : {
         borderColor: "var(--border-subtle)",
         background: "var(--bg-sidebar)",
         backdropFilter: "saturate(180%) blur(24px)",
         WebkitBackdropFilter: "saturate(180%) blur(24px)",
-      }}
-    >
-      <div className="titlebar" data-tauri-drag-region />
+      };
+
+  return (
+    <section className={shell} style={shellStyle}>
+      {embedded ? null : <div className="titlebar" data-tauri-drag-region />}
 
       {!project ? (
         <div

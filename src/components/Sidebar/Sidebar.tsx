@@ -40,14 +40,11 @@ export function Sidebar({ categories, projects }: SidebarProps) {
     >
       <div className="titlebar" data-tauri-drag-region />
 
-      <div className="flex items-center justify-between px-3 pb-2 pt-1 no-drag">
-        <span
-          className="text-[11px] font-semibold uppercase tracking-wider"
-          style={{ color: "var(--text-tertiary)" }}
-        >
+      <div className="no-drag flex items-center gap-2 px-3 pb-3 pt-1">
+        <img src="/logo.png" alt="Projekt" className="h-6 w-6 rounded-md shadow-sm" />
+        <span className="text-[14px] font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
           Projekt
         </span>
-        <AddCategoryPopover sortOrder={categories.length} />
       </div>
 
       <div className="px-2">
@@ -59,31 +56,44 @@ export function Sidebar({ categories, projects }: SidebarProps) {
         >
           <FolderKanban size={14} style={{ color: isAllSelected ? "#fff" : "var(--text-secondary)" }} />
           <span className="min-w-0 flex-1 truncate text-[13px] font-medium">All Projects</span>
-          <span className="row-meta text-[11px]" style={{ color: isAllSelected ? "#fff" : "var(--text-tertiary)" }}>
+          <span
+            className="row-meta text-[11px]"
+            style={{ color: isAllSelected ? "rgba(255,255,255,0.85)" : "var(--text-tertiary)" }}
+          >
             {allCount}
           </span>
         </button>
       </div>
 
-      <div className="mt-3 px-3 pb-1">
+      <div className="mt-3 flex items-center justify-between px-3 pb-1 no-drag">
         <span
           className="text-[11px] font-semibold uppercase tracking-wider"
           style={{ color: "var(--text-tertiary)" }}
         >
           Categories
         </span>
+        <AddCategoryPopover sortOrder={categories.length} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-2">
-        {visible.map((category) => (
-          <CategoryItem
-            key={category.id}
-            category={category}
-            count={counts[category.id] ?? 0}
-            selected={selectedCategoryId === category.id}
-            onSelect={() => handleSelectCategory(category.id)}
-          />
-        ))}
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-2">
+        {visible.length ? (
+          visible.map((category) => (
+            <CategoryItem
+              key={category.id}
+              category={category}
+              count={counts[category.id] ?? 0}
+              selected={selectedCategoryId === category.id}
+              onSelect={() => handleSelectCategory(category.id)}
+            />
+          ))
+        ) : (
+          <div
+            className="mx-1 mt-1 rounded-[8px] border border-dashed px-3 py-3 text-center text-[11px]"
+            style={{ borderColor: "var(--border-strong)", color: "var(--text-tertiary)" }}
+          >
+            No categories yet. Tap + above to add one.
+          </div>
+        )}
       </div>
 
       <div className="border-t px-2 py-2" style={{ borderColor: "var(--border-divider)" }}>
