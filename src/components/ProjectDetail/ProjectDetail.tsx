@@ -1,6 +1,8 @@
-import { CalendarClock, Eye, EyeOff, Folder, Pencil, Tag } from "lucide-react";
+import { confirm } from "@tauri-apps/plugin-dialog";
+import { CalendarClock, Eye, EyeOff, Folder, Pencil, Tag, Trash2 } from "lucide-react";
 import { findCategoryName } from "../../lib/categoryUtils";
 import { useProjectActions } from "../../hooks/useProjects";
+import { getDeleteProjectMessage } from "../../lib/projectDelete";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { AppLauncher, Category, CommandTemplate, Project } from "../../lib/types";
 import { ActionBar } from "./ActionBar";
@@ -22,7 +24,8 @@ export function ProjectDetail({
   embedded = false,
 }: ProjectDetailProps) {
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
-  const { hideProject } = useProjectActions();
+  const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
+  const { hideProject, deleteProject } = useProjectActions();
 
   const shell = embedded
     ? "flex h-full min-h-0 w-full flex-col"
@@ -36,6 +39,21 @@ export function ProjectDetail({
         backdropFilter: "saturate(180%) blur(24px)",
         WebkitBackdropFilter: "saturate(180%) blur(24px)",
       };
+
+  const handleDelete = async (currentProject: Project) => {
+    const confirmed = await confirm(getDeleteProjectMessage(currentProject.name), {
+      title: "Delete Project",
+      kind: "warning",
+      okLabel: "Delete",
+      cancelLabel: "Cancel",
+    });
+
+    if (confirmed) {
+      deleteProject.mutate(currentProject.id, {
+        onSuccess: () => setSelectedProjectId(null),
+      });
+    }
+  };
 
   return (
     <section className={shell} style={shellStyle}>
@@ -88,6 +106,15 @@ export function ProjectDetail({
                 title={project.hidden ? "Unhide" : "Hide"}
               >
                 {project.hidden ? <Eye size={13} /> : <EyeOff size={13} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDelete(project)}
+                className="btn-icon btn-destructive"
+                aria-label={`Delete ${project.name}`}
+                title="Delete"
+              >
+                <Trash2 size={13} />
               </button>
             </div>
           </div>

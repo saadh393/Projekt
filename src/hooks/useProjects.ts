@@ -39,6 +39,10 @@ export const useProjectActions = () => {
         api.hideProject(id, hidden),
       onSuccess: invalidate,
     }),
+    deleteProject: useMutation({
+      mutationFn: (id: string) => api.deleteProject(id),
+      onSuccess: invalidate,
+    }),
     reorderProjects: useMutation({
       mutationFn: (ids: string[]) => api.reorderProjects(ids),
       onSuccess: invalidate,

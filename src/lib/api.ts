@@ -25,6 +25,7 @@ export const api = {
     call<Project>("update_project", { id, input: project }),
   hideProject: (id: string, hidden: boolean) =>
     call<Project>("set_project_hidden", { id, hidden }),
+  deleteProject: (id: string) => call<void>("delete_project", { id }),
   reorderProjects: (ids: string[]) => call<Project[]>("reorder_projects", { ids }),
   openFinder: (projectId: string) => call<void>("open_project_in_finder", { projectId }),
   openVsCode: (projectId: string) => call<void>("open_project_in_vscode", { projectId }),

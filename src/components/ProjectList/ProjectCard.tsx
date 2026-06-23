@@ -1,7 +1,9 @@
 import { useMemo, type MouseEvent } from "react";
-import { Code2, Eye, EyeOff, FolderOpen, GripVertical, Pencil, Terminal } from "lucide-react";
+import { confirm } from "@tauri-apps/plugin-dialog";
+import { Code2, Eye, EyeOff, FolderOpen, GripVertical, Pencil, Terminal, Trash2 } from "lucide-react";
 import { findCategoryName } from "../../lib/categoryUtils";
 import { cx } from "../../lib/cx";
+import { getDeleteProjectMessage } from "../../lib/projectDelete";
 import type { AppLauncher, Category, Project } from "../../lib/types";
 import type { ContextMenuOption } from "../../lib/contextMenuTypes";
 import { useContextMenu } from "../../hooks/useContextMenu";
@@ -33,8 +35,24 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const categoryName = findCategoryName(categories, project.categoryId);
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
-  const { hideProject, openFinder, openVsCode, openTerminal } = useProjectActions();
+  const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
+  const { hideProject, deleteProject, openFinder, openVsCode, openTerminal } = useProjectActions();
   const { position, open, close } = useContextMenu();
+
+  const handleDelete = async () => {
+    const confirmed = await confirm(getDeleteProjectMessage(project.name), {
+      title: "Delete Project",
+      kind: "warning",
+      okLabel: "Delete",
+      cancelLabel: "Cancel",
+    });
+
+    if (confirmed) {
+      deleteProject.mutate(project.id, {
+        onSuccess: () => setSelectedProjectId(null),
+      });
+    }
+  };
 
   const options = useMemo<ContextMenuOption[]>(
     () => [
@@ -74,8 +92,25 @@ export function ProjectCard({
         icon: project.hidden ? <Eye size={14} /> : <EyeOff size={14} />,
         onSelect: () => hideProject.mutate({ id: project.id, hidden: !project.hidden }),
       },
+      {
+        kind: "action",
+        id: "delete",
+        label: "Delete Project",
+        icon: <Trash2 size={14} />,
+        destructive: true,
+        onSelect: () => void handleDelete(),
+      },
     ],
-    [project.id, project.hidden, openFinder, openVsCode, openTerminal, hideProject, setEditingProjectId],
+    [
+      project.id,
+      project.hidden,
+      openFinder,
+      openVsCode,
+      openTerminal,
+      hideProject,
+      setEditingProjectId,
+      handleDelete,
+    ],
   );
 
   const handleContextMenu = (event: MouseEvent) => {
