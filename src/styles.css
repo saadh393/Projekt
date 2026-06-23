@@ -71,6 +71,44 @@ textarea,
   cursor: text;
 }
 
+.reorder-controls {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.reorder-controls button {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: background-color 120ms var(--ease-out), transform 120ms var(--ease-out);
+}
+
+.reorder-controls button:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.reorder-controls button:disabled {
+  opacity: 0.35;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.reorder-controls button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
 button,
 input,
 textarea,

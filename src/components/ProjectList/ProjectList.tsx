@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useProjectActions } from "../../hooks/useProjects";
 import { filterProjectsByQuery } from "../../lib/fuzzySearch";
 import { projectsForCategory, sortProjects, visibleProjects } from "../../lib/projectSort";
@@ -15,7 +14,7 @@ type ProjectListProps = {
   launchers: AppLauncher[];
 };
 
-export function ProjectList({ projects, categories, launchers }: ProjectListProps) {
+export function ProjectList({ projects, categories }: ProjectListProps) {
   const selectedCategoryId = useProjectUiStore((state) => state.selectedCategoryId);
   const selectedProjectId = useProjectUiStore((state) => state.selectedProjectId);
   const searchQuery = useProjectUiStore((state) => state.searchQuery);
@@ -29,7 +28,6 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
   const isReordering = useProjectUiStore((state) => state.isReorderingProjects);
   const setReordering = useProjectUiStore((state) => state.setReorderingProjects);
   const { reorderProjects } = useProjectActions();
-  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const scoped = projectsForCategory(projects, selectedCategoryId);
   const visible = visibleProjects(scoped, showHiddenProjects);
   const filtered = filterProjectsByQuery(visible, categories, searchQuery);
@@ -37,17 +35,11 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
   const activeCategory = categories.find((category) => category.id === selectedCategoryId);
   const heading = activeCategory ? activeCategory.name : "All Projects";
 
-  const reorderVisibleProjects = (targetProjectId: string) => {
-    if (!draggingProjectId || draggingProjectId === targetProjectId) {
-      return;
-    }
-
-    const fromIndex = sorted.findIndex((project) => project.id === draggingProjectId);
-    const toIndex = sorted.findIndex((project) => project.id === targetProjectId);
-    const reordered = moveItem(sorted, fromIndex, toIndex);
-
+  const moveProjectBy = (index: number, delta: number) => {
+    const targetIndex = index + delta;
+    if (targetIndex < 0 || targetIndex >= sorted.length) return;
+    const reordered = moveItem(sorted, index, targetIndex);
     reorderProjects.mutate(reordered.map((project) => project.id));
-    setDraggingProjectId(null);
   };
 
   return (
@@ -95,18 +87,18 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
               }
             }}
           >
-            {sorted.map((project) => (
+            {sorted.map((project, index) => (
               <ProjectCard
                 key={project.id}
                 project={project}
                 categories={categories}
-                launchers={launchers}
                 selected={selectedProjectId === project.id}
-                manualMode={isReordering}
+                reordering={isReordering}
+                canMoveUp={index > 0}
+                canMoveDown={index < sorted.length - 1}
                 onSelect={() => setSelectedProjectId(project.id)}
-                onDragStart={() => setDraggingProjectId(project.id)}
-                onDragOver={() => undefined}
-                onDrop={() => reorderVisibleProjects(project.id)}
+                onMoveUp={() => moveProjectBy(index, -1)}
+                onMoveDown={() => moveProjectBy(index, 1)}
               />
             ))}
           </div>

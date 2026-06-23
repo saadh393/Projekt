@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ArrowUpDown, Check, FolderKanban, Settings } from "lucide-react";
 import { allProjectsCategoryId } from "../../lib/constants";
 import { countProjectsByCategory, visibleCategories } from "../../lib/categoryUtils";
@@ -26,24 +25,17 @@ export function Sidebar({ categories, projects }: SidebarProps) {
   const visible = visibleCategories(categories);
   const allCount = projects.filter((project) => !project.hidden).length;
   const isAllSelected = selectedCategoryId === allProjectsCategoryId;
-  const [draggingCategoryId, setDraggingCategoryId] = useState<string | null>(null);
 
   const handleSelectCategory = (id: string) => {
     setSelectedCategoryId(id);
     setSelectedProjectId(null);
   };
 
-  const reorderVisibleCategories = (targetCategoryId: string) => {
-    if (!draggingCategoryId || draggingCategoryId === targetCategoryId) {
-      return;
-    }
-
-    const fromIndex = visible.findIndex((category) => category.id === draggingCategoryId);
-    const toIndex = visible.findIndex((category) => category.id === targetCategoryId);
-    const reordered = moveItem(visible, fromIndex, toIndex);
-
+  const moveCategoryBy = (index: number, delta: number) => {
+    const targetIndex = index + delta;
+    if (targetIndex < 0 || targetIndex >= visible.length) return;
+    const reordered = moveItem(visible, index, targetIndex);
     reorderCategories.mutate(reordered.map((category) => category.id));
-    setDraggingCategoryId(null);
   };
 
   return (
@@ -108,17 +100,18 @@ export function Sidebar({ categories, projects }: SidebarProps) {
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-2">
         {visible.length ? (
-          visible.map((category) => (
+          visible.map((category, index) => (
             <CategoryItem
               key={category.id}
               category={category}
               count={counts[category.id] ?? 0}
               selected={selectedCategoryId === category.id}
               reordering={isReordering}
+              canMoveUp={index > 0}
+              canMoveDown={index < visible.length - 1}
               onSelect={() => handleSelectCategory(category.id)}
-              onDragStart={() => setDraggingCategoryId(category.id)}
-              onDragOver={() => undefined}
-              onDrop={() => reorderVisibleCategories(category.id)}
+              onMoveUp={() => moveCategoryBy(index, -1)}
+              onMoveDown={() => moveCategoryBy(index, 1)}
             />
           ))
         ) : (

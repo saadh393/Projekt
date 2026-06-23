@@ -1,5 +1,5 @@
 import { useMemo, type MouseEvent } from "react";
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 import { getCategoryIcon } from "../../lib/iconRegistry";
 import { useCategoryActions } from "../../hooks/useCategories";
 import { useContextMenu } from "../../hooks/useContextMenu";
@@ -13,10 +13,11 @@ type CategoryItemProps = {
   count: number;
   selected: boolean;
   reordering: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onSelect: () => void;
-  onDragStart: () => void;
-  onDragOver: () => void;
-  onDrop: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 };
 
 export function CategoryItem({
@@ -24,10 +25,11 @@ export function CategoryItem({
   count,
   selected,
   reordering,
+  canMoveUp,
+  canMoveDown,
   onSelect,
-  onDragStart,
-  onDragOver,
-  onDrop,
+  onMoveUp,
+  onMoveDown,
 }: CategoryItemProps) {
   const Icon = getCategoryIcon(category.icon);
   const { deleteCategory } = useCategoryActions();
@@ -61,49 +63,54 @@ export function CategoryItem({
   };
 
   return (
-    <div
-      draggable={reordering}
-      onDragStart={onDragStart}
-      onDragOver={(event) => {
-        if (!reordering) return;
-        event.preventDefault();
-        onDragOver();
-      }}
-      onDrop={(event) => {
-        if (!reordering) return;
-        event.preventDefault();
-        onDrop();
-      }}
-    >
+    <div className="relative">
       <button
         type="button"
         onClick={reordering ? undefined : onSelect}
         onContextMenu={handleContextMenu}
         className="row"
         data-selected={selected}
+        style={reordering ? { paddingRight: 58 } : undefined}
       >
-        {reordering ? (
-          <GripVertical
-            size={12}
-            style={{ color: selected ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)" }}
-            className="cursor-grab"
-          />
-        ) : (
-          <span
-            className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded"
-            style={{ backgroundColor: category.color }}
-          >
-            <Icon size={11} color="#fff" strokeWidth={2.5} />
-          </span>
-        )}
-        <span className="min-w-0 flex-1 truncate text-[13px]">{category.name}</span>
         <span
-          className="row-meta text-[11px] tabular-nums"
-          style={{ color: selected ? "rgba(255,255,255,0.85)" : "var(--text-tertiary)" }}
+          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded"
+          style={{ backgroundColor: category.color }}
         >
-          {count}
+          <Icon size={11} color="#fff" strokeWidth={2.5} />
         </span>
+        <span className="min-w-0 flex-1 truncate text-[13px]">{category.name}</span>
+        {!reordering ? (
+          <span
+            className="row-meta text-[11px] tabular-nums"
+            style={{ color: selected ? "rgba(255,255,255,0.85)" : "var(--text-tertiary)" }}
+          >
+            {count}
+          </span>
+        ) : null}
       </button>
+
+      {reordering ? (
+        <div className="reorder-controls">
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            aria-label={`Move ${category.name} up`}
+            title="Move up"
+          >
+            <ChevronUp size={12} />
+          </button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            aria-label={`Move ${category.name} down`}
+            title="Move down"
+          >
+            <ChevronDown size={12} />
+          </button>
+        </div>
+      ) : null}
 
       <ContextMenu position={position} options={options} onClose={close} />
     </div>
