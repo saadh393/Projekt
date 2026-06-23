@@ -134,6 +134,33 @@ pub fn set_category_hidden(
 }
 
 #[tauri::command]
+pub fn reorder_categories(
+    db: State<'_, Database>,
+    ids: Vec<String>,
+) -> Result<Vec<Category>, String> {
+    db.with_connection(|connection| {
+        for (sort_order, id) in ids.iter().enumerate() {
+            connection.execute(
+                "UPDATE categories SET sort_order = :sort_order WHERE id = :id",
+                named_params! {
+                    ":id": id,
+                    ":sort_order": sort_order as i64,
+                },
+            )?;
+        }
+
+        let mut statement =
+            connection.prepare("SELECT * FROM categories ORDER BY sort_order ASC, name ASC")?;
+        let categories = statement
+            .query_map([], category_from_row)?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(categories)
+    })
+    .map_err(command_error)
+}
+
+#[tauri::command]
 pub fn delete_category(db: State<'_, Database>, id: String) -> Result<(), String> {
     db.with_connection(|connection| {
         connection.execute(

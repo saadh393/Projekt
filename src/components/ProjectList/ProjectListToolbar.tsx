@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Plus, Search } from "lucide-react";
+import { ArrowUpDown, Check, Eye, EyeOff, Plus, Search } from "lucide-react";
 import { sortLabels } from "../../lib/constants";
 import type { SortMode } from "../../lib/types";
 
@@ -6,9 +6,11 @@ type ProjectListToolbarProps = {
   searchQuery: string;
   sortMode: SortMode;
   showHiddenProjects: boolean;
+  isReordering: boolean;
   onSearchChange: (value: string) => void;
   onSortChange: (value: SortMode) => void;
   onShowHiddenChange: (value: boolean) => void;
+  onReorderToggle: (value: boolean) => void;
   onAddProject: () => void;
 };
 
@@ -16,9 +18,11 @@ export function ProjectListToolbar({
   searchQuery,
   sortMode,
   showHiddenProjects,
+  isReordering,
   onSearchChange,
   onSortChange,
   onShowHiddenChange,
+  onReorderToggle,
   onAddProject,
 }: ProjectListToolbarProps) {
   return (
@@ -42,6 +46,7 @@ export function ProjectListToolbar({
           value={sortMode}
           onChange={(event) => onSortChange(event.target.value as SortMode)}
           className="field cursor-default appearance-none pr-7"
+          disabled={isReordering}
         >
           {Object.entries(sortLabels).map(([value, label]) => (
             <option key={value} value={value}>
@@ -71,6 +76,23 @@ export function ProjectListToolbar({
       >
         {showHiddenProjects ? <Eye size={13} /> : <EyeOff size={13} />}
         Hidden
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onReorderToggle(!isReordering)}
+        className="btn"
+        title={isReordering ? "Finish reordering" : "Reorder projects"}
+        aria-pressed={isReordering}
+        style={{
+          background: isReordering ? "var(--accent)" : undefined,
+          color: isReordering ? "#fff" : undefined,
+          borderColor: isReordering ? "transparent" : undefined,
+          boxShadow: isReordering ? "0 1px 2px rgba(10,132,255,0.28)" : undefined,
+        }}
+      >
+        {isReordering ? <Check size={13} /> : <ArrowUpDown size={13} />}
+        {isReordering ? "Done" : "Reorder"}
       </button>
 
       <button type="button" onClick={onAddProject} className="btn btn-primary">

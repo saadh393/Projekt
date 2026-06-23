@@ -29,6 +29,10 @@ export const useCategoryActions = () => {
         api.updateCategory(id, category),
       onSuccess: invalidate,
     }),
+    reorderCategories: useMutation({
+      mutationFn: (ids: string[]) => api.reorderCategories(ids),
+      onSuccess: invalidate,
+    }),
     deleteCategory: useMutation({
       mutationFn: (id: string) => api.deleteCategory(id),
       onSuccess: invalidate,

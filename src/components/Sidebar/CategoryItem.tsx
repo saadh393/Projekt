@@ -1,5 +1,5 @@
 import { useMemo, type MouseEvent } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import { getCategoryIcon } from "../../lib/iconRegistry";
 import { useCategoryActions } from "../../hooks/useCategories";
 import { useContextMenu } from "../../hooks/useContextMenu";
@@ -12,10 +12,23 @@ type CategoryItemProps = {
   category: Category;
   count: number;
   selected: boolean;
+  reordering: boolean;
   onSelect: () => void;
+  onDragStart: () => void;
+  onDragOver: () => void;
+  onDrop: () => void;
 };
 
-export function CategoryItem({ category, count, selected, onSelect }: CategoryItemProps) {
+export function CategoryItem({
+  category,
+  count,
+  selected,
+  reordering,
+  onSelect,
+  onDragStart,
+  onDragOver,
+  onDrop,
+}: CategoryItemProps) {
   const Icon = getCategoryIcon(category.icon);
   const { deleteCategory } = useCategoryActions();
   const setEditingCategoryId = useProjectUiStore((state) => state.setEditingCategoryId);
@@ -48,20 +61,41 @@ export function CategoryItem({ category, count, selected, onSelect }: CategoryIt
   };
 
   return (
-    <>
+    <div
+      draggable={reordering}
+      onDragStart={onDragStart}
+      onDragOver={(event) => {
+        if (!reordering) return;
+        event.preventDefault();
+        onDragOver();
+      }}
+      onDrop={(event) => {
+        if (!reordering) return;
+        event.preventDefault();
+        onDrop();
+      }}
+    >
       <button
         type="button"
-        onClick={onSelect}
+        onClick={reordering ? undefined : onSelect}
         onContextMenu={handleContextMenu}
         className="row"
         data-selected={selected}
       >
-        <span
-          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded"
-          style={{ backgroundColor: category.color }}
-        >
-          <Icon size={11} color="#fff" strokeWidth={2.5} />
-        </span>
+        {reordering ? (
+          <GripVertical
+            size={12}
+            style={{ color: selected ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)" }}
+            className="cursor-grab"
+          />
+        ) : (
+          <span
+            className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded"
+            style={{ backgroundColor: category.color }}
+          >
+            <Icon size={11} color="#fff" strokeWidth={2.5} />
+          </span>
+        )}
         <span className="min-w-0 flex-1 truncate text-[13px]">{category.name}</span>
         <span
           className="row-meta text-[11px] tabular-nums"
@@ -72,6 +106,6 @@ export function CategoryItem({ category, count, selected, onSelect }: CategoryIt
       </button>
 
       <ContextMenu position={position} options={options} onClose={close} />
-    </>
+    </div>
   );
 }

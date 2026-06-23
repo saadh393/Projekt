@@ -1,6 +1,9 @@
-import { FolderKanban, Settings } from "lucide-react";
+import { useState } from "react";
+import { ArrowUpDown, Check, FolderKanban, Settings } from "lucide-react";
 import { allProjectsCategoryId } from "../../lib/constants";
 import { countProjectsByCategory, visibleCategories } from "../../lib/categoryUtils";
+import { moveItem } from "../../lib/reorder";
+import { useCategoryActions } from "../../hooks/useCategories";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { Category, Project } from "../../lib/types";
 import { AddCategoryPopover } from "../Forms/AddCategoryPopover";
@@ -16,14 +19,31 @@ export function Sidebar({ categories, projects }: SidebarProps) {
   const setSelectedCategoryId = useProjectUiStore((state) => state.setSelectedCategoryId);
   const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
   const setSettingsOpen = useProjectUiStore((state) => state.setSettingsOpen);
+  const isReordering = useProjectUiStore((state) => state.isReorderingCategories);
+  const setReordering = useProjectUiStore((state) => state.setReorderingCategories);
+  const { reorderCategories } = useCategoryActions();
   const counts = countProjectsByCategory(projects);
   const visible = visibleCategories(categories);
   const allCount = projects.filter((project) => !project.hidden).length;
   const isAllSelected = selectedCategoryId === allProjectsCategoryId;
+  const [draggingCategoryId, setDraggingCategoryId] = useState<string | null>(null);
 
   const handleSelectCategory = (id: string) => {
     setSelectedCategoryId(id);
     setSelectedProjectId(null);
+  };
+
+  const reorderVisibleCategories = (targetCategoryId: string) => {
+    if (!draggingCategoryId || draggingCategoryId === targetCategoryId) {
+      return;
+    }
+
+    const fromIndex = visible.findIndex((category) => category.id === draggingCategoryId);
+    const toIndex = visible.findIndex((category) => category.id === targetCategoryId);
+    const reordered = moveItem(visible, fromIndex, toIndex);
+
+    reorderCategories.mutate(reordered.map((category) => category.id));
+    setDraggingCategoryId(null);
   };
 
   return (
@@ -61,13 +81,28 @@ export function Sidebar({ categories, projects }: SidebarProps) {
         </button>
       </div>
 
-      <div className="mt-3 flex items-center justify-between px-3 pb-1">
+      <div className="mt-3 flex items-center gap-1 px-3 pb-1">
         <span
-          className="text-[11px] font-semibold uppercase tracking-wider"
+          className="flex-1 text-[11px] font-semibold uppercase tracking-wider"
           style={{ color: "var(--text-tertiary)" }}
         >
           Categories
         </span>
+        {categories.length > 1 ? (
+          <button
+            type="button"
+            onClick={() => setReordering(!isReordering)}
+            className="btn-icon"
+            aria-label={isReordering ? "Finish reordering" : "Reorder categories"}
+            title={isReordering ? "Finish reordering" : "Reorder categories"}
+            style={{
+              background: isReordering ? "var(--accent-soft)" : undefined,
+              color: isReordering ? "var(--accent)" : undefined,
+            }}
+          >
+            {isReordering ? <Check size={13} /> : <ArrowUpDown size={13} />}
+          </button>
+        ) : null}
         <AddCategoryPopover sortOrder={categories.length} />
       </div>
 
@@ -79,7 +114,11 @@ export function Sidebar({ categories, projects }: SidebarProps) {
               category={category}
               count={counts[category.id] ?? 0}
               selected={selectedCategoryId === category.id}
+              reordering={isReordering}
               onSelect={() => handleSelectCategory(category.id)}
+              onDragStart={() => setDraggingCategoryId(category.id)}
+              onDragOver={() => undefined}
+              onDrop={() => reorderVisibleCategories(category.id)}
             />
           ))
         ) : (

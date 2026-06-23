@@ -22,6 +22,7 @@ pub fn run() {
             commands::category::create_category,
             commands::category::update_category,
             commands::category::set_category_hidden,
+            commands::category::reorder_categories,
             commands::category::delete_category,
             commands::project::list_projects,
             commands::project::search_projects,

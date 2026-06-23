@@ -26,6 +26,8 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
   const setShowHiddenProjects = useProjectUiStore((state) => state.setShowHiddenProjects);
   const setProjectSheetOpen = useProjectUiStore((state) => state.setProjectSheetOpen);
   const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
+  const isReordering = useProjectUiStore((state) => state.isReorderingProjects);
+  const setReordering = useProjectUiStore((state) => state.setReorderingProjects);
   const { reorderProjects } = useProjectActions();
   const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const scoped = projectsForCategory(projects, selectedCategoryId);
@@ -68,9 +70,11 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
         searchQuery={searchQuery}
         sortMode={sortMode}
         showHiddenProjects={showHiddenProjects}
+        isReordering={isReordering}
         onSearchChange={setSearchQuery}
         onSortChange={setSortMode}
         onShowHiddenChange={setShowHiddenProjects}
+        onReorderToggle={setReordering}
         onAddProject={() => setProjectSheetOpen(true)}
       />
 
@@ -98,7 +102,7 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
                 categories={categories}
                 launchers={launchers}
                 selected={selectedProjectId === project.id}
-                manualMode={sortMode === "manual"}
+                manualMode={isReordering}
                 onSelect={() => setSelectedProjectId(project.id)}
                 onDragStart={() => setDraggingProjectId(project.id)}
                 onDragOver={() => undefined}

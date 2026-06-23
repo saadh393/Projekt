@@ -12,6 +12,8 @@ type ProjectUiState = {
   editingCategoryId: string | null;
   isSettingsOpen: boolean;
   settingsTab: "general" | "launchers" | "commands";
+  isReorderingProjects: boolean;
+  isReorderingCategories: boolean;
   setSelectedCategoryId: (selectedCategoryId: string) => void;
   setSelectedProjectId: (selectedProjectId: string | null) => void;
   setSearchQuery: (searchQuery: string) => void;
@@ -22,6 +24,8 @@ type ProjectUiState = {
   setEditingCategoryId: (editingCategoryId: string | null) => void;
   setSettingsOpen: (isSettingsOpen: boolean) => void;
   setSettingsTab: (settingsTab: "general" | "launchers" | "commands") => void;
+  setReorderingProjects: (value: boolean) => void;
+  setReorderingCategories: (value: boolean) => void;
 };
 
 export const useProjectUiStore = create<ProjectUiState>((set) => ({
@@ -35,6 +39,8 @@ export const useProjectUiStore = create<ProjectUiState>((set) => ({
   editingCategoryId: null,
   isSettingsOpen: false,
   settingsTab: "general",
+  isReorderingProjects: false,
+  isReorderingCategories: false,
   setSelectedCategoryId: (selectedCategoryId) => set({ selectedCategoryId }),
   setSelectedProjectId: (selectedProjectId) => set({ selectedProjectId }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
@@ -50,4 +56,10 @@ export const useProjectUiStore = create<ProjectUiState>((set) => ({
   setEditingCategoryId: (editingCategoryId) => set({ editingCategoryId }),
   setSettingsOpen: (isSettingsOpen) => set({ isSettingsOpen }),
   setSettingsTab: (settingsTab) => set({ settingsTab }),
+  setReorderingProjects: (value) =>
+    set((state) => ({
+      isReorderingProjects: value,
+      sortMode: value ? "manual" : state.sortMode,
+    })),
+  setReorderingCategories: (value) => set({ isReorderingCategories: value }),
 }));

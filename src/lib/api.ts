@@ -41,6 +41,7 @@ export const api = {
     call<Category>("update_category", { id, input: category }),
   hideCategory: (id: string, hidden: boolean) =>
     call<Category>("set_category_hidden", { id, hidden }),
+  reorderCategories: (ids: string[]) => call<Category[]>("reorder_categories", { ids }),
   deleteCategory: (id: string) => call<void>("delete_category", { id }),
 
   listLaunchers: () => call<AppLauncher[]>("list_app_launchers"),
