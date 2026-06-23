@@ -8,13 +8,10 @@ type ActionBarProps = {
   compact?: boolean;
 };
 
-const actionButtonClass =
-  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white bg-white/90 px-2.5 text-xs font-medium text-zinc-800 shadow-sm hover:bg-white dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900";
+const primaryButtonClass =
+  "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium";
 
-const launcherButtonClass =
-  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200/70 bg-zinc-50/80 px-2.5 text-xs text-zinc-700 hover:bg-white dark:border-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-900";
-
-export function ActionBar({ project, launchers, compact = false }: ActionBarProps) {
+export function ActionBar({ project, launchers }: ActionBarProps) {
   const { openFinder, openVsCode, openTerminal, openWithLauncher } = useProjectActions();
 
   const hardcodedActions: Array<{
@@ -22,25 +19,19 @@ export function ActionBar({ project, launchers, compact = false }: ActionBarProp
     icon: LucideIcon;
     onClick: () => void;
   }> = [
-    {
-      label: "Finder",
-      icon: FolderOpen,
-      onClick: () => openFinder.mutate(project.id),
-    },
-    {
-      label: "VS Code",
-      icon: Code2,
-      onClick: () => openVsCode.mutate(project.id),
-    },
-    {
-      label: "Terminal",
-      icon: Terminal,
-      onClick: () => openTerminal.mutate(project.id),
-    },
+    { label: "Finder", icon: FolderOpen, onClick: () => openFinder.mutate(project.id) },
+    { label: "VS Code", icon: Code2, onClick: () => openVsCode.mutate(project.id) },
+    { label: "Terminal", icon: Terminal, onClick: () => openTerminal.mutate(project.id) },
   ];
 
   return (
-    <div className={`flex flex-wrap gap-2 ${compact ? "" : "py-2"}`}>
+    <div
+      className="flex flex-wrap gap-1.5 rounded-[10px] border p-1.5"
+      style={{
+        background: "rgba(255,255,255,0.65)",
+        borderColor: "var(--border-subtle)",
+      }}
+    >
       {hardcodedActions.map((action) => {
         const Icon = action.icon;
 
@@ -49,10 +40,15 @@ export function ActionBar({ project, launchers, compact = false }: ActionBarProp
             key={action.label}
             type="button"
             onClick={action.onClick}
-            className={actionButtonClass}
-            title={action.label}
+            className={primaryButtonClass}
+            title={`Open in ${action.label}`}
+            style={{
+              background: "var(--accent)",
+              color: "#fff",
+              boxShadow: "0 1px 2px rgba(10,132,255,0.25)",
+            }}
           >
-            <Icon size={14} />
+            <Icon size={12} />
             {action.label}
           </button>
         );
@@ -62,10 +58,15 @@ export function ActionBar({ project, launchers, compact = false }: ActionBarProp
           key={launcher.id}
           type="button"
           onClick={() => openWithLauncher.mutate({ projectId: project.id, launcherId: launcher.id })}
-          className={launcherButtonClass}
+          className={primaryButtonClass}
           title={launcher.appPath}
+          style={{
+            background: "#fff",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border-strong)",
+          }}
         >
-          <MonitorUp size={14} />
+          <MonitorUp size={12} />
           {launcher.label}
         </button>
       ))}

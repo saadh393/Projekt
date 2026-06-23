@@ -6,6 +6,7 @@ import { emptyProjectDraft, projectAccentColors } from "../../lib/constants";
 import { formatTags, parseTags, pathBasename } from "../../lib/formUtils";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { Category, CommandTemplate, Project, ProjectDraft } from "../../lib/types";
+import { SheetField } from "./SheetField";
 
 type AddProjectSheetProps = {
   categories: Category[];
@@ -20,9 +21,22 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
   const editingProjectId = useProjectUiStore((state) => state.editingProjectId);
   const [draft, setDraft] = useState<ProjectDraft>(emptyProjectDraft);
   const [tags, setTags] = useState("");
+  const [render, setRender] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const editingProject = projects.find((project) => project.id === editingProjectId) ?? null;
+
+  useEffect(() => {
+    if (isOpen) {
+      setRender(true);
+      const id = requestAnimationFrame(() => setMounted(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setMounted(false);
+    const timer = window.setTimeout(() => setRender(false), 300);
+    return () => window.clearTimeout(timer);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -62,10 +76,7 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
   };
 
   const chooseFolder = async () => {
-    const selected = await open({
-      directory: true,
-      multiple: false,
-    });
+    const selected = await open({ directory: true, multiple: false });
 
     if (typeof selected === "string") {
       handlePathChange(selected);
@@ -90,85 +101,75 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
     if (editingProject) {
       updateProject.mutate(
         { id: editingProject.id, project },
-        {
-          onSuccess: () => setOpen(false),
-        },
+        { onSuccess: () => setOpen(false) },
       );
       return;
     }
 
-    createProject.mutate(project, {
-      onSuccess: () => setOpen(false),
-    });
+    createProject.mutate(project, { onSuccess: () => setOpen(false) });
   };
 
-  if (!isOpen) {
+  if (!render) {
     return null;
   }
 
+  const state = mounted ? "open" : "closed";
+
   return (
-    <div className="fixed inset-0 z-40 bg-zinc-950/25 backdrop-blur-sm">
-      <form
-        onSubmit={handleSubmit}
-        className="ml-auto flex h-full w-full max-w-md flex-col border-l border-white/70 bg-[#fbfaf7] shadow-2xl shadow-zinc-950/20 dark:bg-zinc-950"
-      >
-        <div className="flex items-center justify-between border-b border-zinc-200/80 px-5 py-4 dark:border-zinc-800">
-          <h2 className="text-base font-semibold">{editingProject ? "Edit Project" : "New Project"}</h2>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            aria-label="Close"
-          >
-            <X size={16} />
+    <>
+      <div className="sheet-backdrop" data-state={state} onClick={() => setOpen(false)} />
+      <form onSubmit={handleSubmit} className="sheet-panel z-50" data-state={state}>
+        <div
+          className="flex items-center justify-between border-b px-5"
+          style={{ borderColor: "var(--border-divider)", height: 52 }}
+        >
+          <h2 className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>
+            {editingProject ? "Edit Project" : "New Project"}
+          </h2>
+          <button type="button" onClick={() => setOpen(false)} className="btn-icon" aria-label="Close">
+            <X size={14} />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium">Folder path</span>
-            <div className="flex gap-2">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <SheetField label="Folder">
+            <div className="flex gap-1.5">
               <input
                 value={draft.path}
                 readOnly
-                className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 font-mono text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                className="field field-mono flex-1"
                 placeholder="/Users/name/work/project"
               />
-              <button
-                type="button"
-                onClick={chooseFolder}
-                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-medium shadow-sm dark:border-zinc-800"
-              >
-                <FolderOpen size={15} />
+              <button type="button" onClick={chooseFolder} className="btn">
+                <FolderOpen size={13} />
                 Browse
               </button>
             </div>
-          </label>
+          </SheetField>
 
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium">Name</span>
+          <SheetField label="Name">
             <input
               value={draft.name}
               onChange={(event) => updateDraft("name", event.target.value)}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+              className="field"
+              placeholder="My project"
             />
-          </label>
+          </SheetField>
 
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium">Description</span>
+          <SheetField label="Description">
             <textarea
               value={draft.description}
               onChange={(event) => updateDraft("description", event.target.value)}
-              className="min-h-24 w-full resize-none rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+              className="field field-multiline"
+              placeholder="What is this project?"
             />
-          </label>
+          </SheetField>
 
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium">Category</span>
+          <SheetField label="Category">
             <select
               value={draft.categoryId ?? ""}
               onChange={(event) => updateDraft("categoryId", event.target.value || null)}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+              className="field appearance-none pr-7"
             >
               <option value="">Unassigned</option>
               {categories.map((category) => (
@@ -177,20 +178,18 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
                 </option>
               ))}
             </select>
-          </label>
+          </SheetField>
 
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium">Tags</span>
+          <SheetField label="Tags">
             <input
               value={tags || formatTags(draft.tags)}
               onChange={(event) => setTags(event.target.value)}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+              className="field"
               placeholder="frontend, client, archived"
             />
-          </label>
+          </SheetField>
 
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Color</div>
+          <SheetField label="Color">
             <div className="flex flex-wrap gap-2">
               {projectAccentColors.map((color) => (
                 <button
@@ -198,27 +197,30 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
                   type="button"
                   aria-label={color}
                   onClick={() => updateDraft("color", color)}
-                  className="h-7 w-7 rounded-full border border-black/10"
+                  className="h-6 w-6 rounded-full"
                   style={{
                     backgroundColor: color,
-                    boxShadow: draft.color === color ? "0 0 0 2px #18181b" : undefined,
+                    boxShadow:
+                      draft.color === color
+                        ? "0 0 0 2px #fff, 0 0 0 4px var(--accent)"
+                        : "inset 0 0 0 1px rgba(0,0,0,0.1)",
                   }}
                 />
               ))}
             </div>
-          </div>
+          </SheetField>
 
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Pinned Commands</div>
+          <SheetField label="Pinned Commands">
             {commandTemplates.length ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {commandTemplates.map((template) => {
                   const checked = draft.pinnedCommands.includes(template.id);
 
                   return (
                     <label
                       key={template.id}
-                      className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white/80 px-3 py-2 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                      className="flex cursor-default items-start gap-2.5 rounded-[8px] border bg-white px-3 py-2 text-[13px]"
+                      style={{ borderColor: "var(--border-subtle)" }}
                     >
                       <input
                         type="checkbox"
@@ -229,30 +231,47 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
                             : draft.pinnedCommands.filter((id) => id !== template.id);
                           updateDraft("pinnedCommands", pinnedCommands);
                         }}
-                        className="mt-1"
+                        className="mt-0.5 accent-[color:var(--accent)]"
                       />
-                      <span className="min-w-0">
+                      <span className="min-w-0 flex-1">
                         <span className="block font-medium">{template.label}</span>
-                        <span className="block truncate font-mono text-xs text-zinc-500">{template.command}</span>
+                        <span
+                          className="block truncate font-mono text-[11px]"
+                          style={{ color: "var(--text-tertiary)" }}
+                        >
+                          {template.command}
+                        </span>
                       </span>
                     </label>
                   );
                 })}
               </div>
             ) : (
-              <p className="rounded-md border border-dashed border-zinc-200 px-3 py-3 text-sm text-zinc-500 dark:border-zinc-800">
+              <p
+                className="rounded-[8px] border border-dashed px-3 py-3 text-[12px]"
+                style={{
+                  borderColor: "var(--border-strong)",
+                  color: "var(--text-tertiary)",
+                }}
+              >
                 Create command templates in Settings.
               </p>
             )}
-          </div>
+          </SheetField>
         </div>
 
-        <div className="border-t border-zinc-200 px-5 py-4 dark:border-zinc-800">
-          <button type="submit" className="w-full rounded-xl bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-zinc-950/15">
+        <div
+          className="flex items-center justify-end gap-2 border-t px-5 py-3"
+          style={{ borderColor: "var(--border-divider)" }}
+        >
+          <button type="button" onClick={() => setOpen(false)} className="btn">
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-primary">
             {editingProject ? "Save Changes" : "Add Project"}
           </button>
         </div>
       </form>
-    </div>
+    </>
   );
 }

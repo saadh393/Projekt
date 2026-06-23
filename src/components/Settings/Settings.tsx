@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { cx } from "../../lib/cx";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
@@ -5,46 +6,79 @@ import { CommandTemplatesTab } from "./CommandTemplatesTab";
 import { GeneralTab } from "./GeneralTab";
 import { LaunchersTab } from "./LaunchersTab";
 
+const tabs = [
+  { id: "general", label: "General" },
+  { id: "launchers", label: "Launchers" },
+  { id: "commands", label: "Commands" },
+] as const;
+
 export function Settings() {
   const isOpen = useProjectUiStore((state) => state.isSettingsOpen);
   const tab = useProjectUiStore((state) => state.settingsTab);
   const setOpen = useProjectUiStore((state) => state.setSettingsOpen);
   const setTab = useProjectUiStore((state) => state.setSettingsTab);
+  const [render, setRender] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) {
+  useEffect(() => {
+    if (isOpen) {
+      setRender(true);
+      const id = requestAnimationFrame(() => setMounted(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setMounted(false);
+    const timer = window.setTimeout(() => setRender(false), 220);
+    return () => window.clearTimeout(timer);
+  }, [isOpen]);
+
+  if (!render) {
     return null;
   }
 
+  const state = mounted ? "open" : "closed";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-      <section className="flex h-[640px] w-full max-w-3xl flex-col rounded-lg bg-white shadow-2xl dark:bg-zinc-950">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-          <h2 className="text-base font-semibold">Settings</h2>
+    <div className="modal-backdrop" data-state={state} onClick={() => setOpen(false)}>
+      <section
+        className="modal-panel w-[680px] max-w-[90vw]"
+        data-state={state}
+        onClick={(event) => event.stopPropagation()}
+        style={{ height: 520 }}
+      >
+        <div
+          className="relative flex items-center justify-center border-b"
+          style={{ borderColor: "var(--border-divider)", height: 44 }}
+        >
+          <h2 className="text-[13px] font-semibold" style={{ color: "var(--text-primary)" }}>
+            Settings
+          </h2>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            className="btn-icon absolute right-2"
             aria-label="Close settings"
           >
-            <X size={16} />
+            <X size={13} />
           </button>
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-[180px_1fr]">
-          <nav className="border-r border-zinc-200 p-3 dark:border-zinc-800">
-            {(["general", "launchers", "commands"] as const).map((item) => (
+          <nav
+            className="border-r p-2"
+            style={{
+              borderColor: "var(--border-divider)",
+              background: "rgba(0,0,0,0.015)",
+            }}
+          >
+            {tabs.map((item) => (
               <button
-                key={item}
+                key={item.id}
                 type="button"
-                onClick={() => setTab(item)}
-                className={cx(
-                  "mb-1 w-full rounded-md px-3 py-2 text-left text-sm capitalize",
-                  tab === item
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900",
-                )}
+                onClick={() => setTab(item.id)}
+                className={cx("row")}
+                data-selected={tab === item.id}
               >
-                {item === "commands" ? "Command Templates" : item}
+                <span className="min-w-0 flex-1 truncate text-[13px]">{item.label}</span>
               </button>
             ))}
           </nav>

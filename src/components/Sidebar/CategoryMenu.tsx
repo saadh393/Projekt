@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 import { useCategoryActions } from "../../hooks/useCategories";
 import { sidebarColors } from "../../lib/constants";
 import { filterIconNames, getCategoryIcon } from "../../lib/iconRegistry";
@@ -10,6 +10,7 @@ type CategoryMenuProps = {
 };
 
 export function CategoryMenu({ category }: CategoryMenuProps) {
+  const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState(category.name);
   const [iconQuery, setIconQuery] = useState("");
   const [icon, setIcon] = useState(category.icon);
@@ -17,90 +18,113 @@ export function CategoryMenu({ category }: CategoryMenuProps) {
   const { updateCategory, hideCategory, deleteCategory } = useCategoryActions();
   const iconNames = useMemo(() => filterIconNames(iconQuery).slice(0, 8), [iconQuery]);
 
-  return (
-    <details className="rounded-md border border-zinc-200 bg-white px-2 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-950">
-      <summary className="cursor-pointer text-zinc-500">Edit {category.name}</summary>
-      <div className="mt-3 space-y-3">
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
-          placeholder="Category name"
-        />
-        <input
-          value={iconQuery}
-          onChange={(event) => setIconQuery(event.target.value)}
-          className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
-          placeholder="Search icons"
-        />
-        <div className="grid grid-cols-4 gap-1">
-          {iconNames.map((iconName) => {
-            const Icon = getCategoryIcon(iconName);
+  const handleSave = () => {
+    updateCategory.mutate({
+      id: category.id,
+      category: {
+        name,
+        icon,
+        color,
+        sortOrder: category.sortOrder,
+        hidden: category.hidden,
+      },
+    });
+  };
 
-            return (
+  return (
+    <div className="mb-1">
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        className="row"
+      >
+        <ChevronRight
+          size={12}
+          style={{
+            color: "var(--text-tertiary)",
+            transform: expanded ? "rotate(90deg)" : "none",
+            transition: "transform 160ms var(--ease-out)",
+          }}
+        />
+        <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: "var(--text-secondary)" }}>
+          Edit {category.name}
+        </span>
+      </button>
+
+      {expanded ? (
+        <div className="mt-2 space-y-2 px-1">
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="field"
+            placeholder="Name"
+          />
+          <input
+            value={iconQuery}
+            onChange={(event) => setIconQuery(event.target.value)}
+            className="field"
+            placeholder="Search icons"
+          />
+          <div className="grid grid-cols-4 gap-1">
+            {iconNames.map((iconName) => {
+              const Icon = getCategoryIcon(iconName);
+              const active = icon === iconName;
+
+              return (
+                <button
+                  key={iconName}
+                  type="button"
+                  title={iconName}
+                  onClick={() => setIcon(iconName)}
+                  className="flex h-7 items-center justify-center rounded"
+                  style={{
+                    background: active ? "var(--accent-soft)" : "transparent",
+                    color: active ? "var(--accent)" : "var(--text-secondary)",
+                  }}
+                >
+                  <Icon size={13} />
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {sidebarColors.map((option) => (
               <button
-                key={iconName}
+                key={option}
                 type="button"
-                title={iconName}
-                onClick={() => setIcon(iconName)}
-                className="flex h-8 items-center justify-center rounded-md border border-zinc-200 hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900"
-              >
-                <Icon size={15} className={icon === iconName ? "text-blue-600" : ""} />
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {sidebarColors.map((option) => (
+                aria-label={option}
+                onClick={() => setColor(option)}
+                className="h-4 w-4 rounded-full"
+                style={{
+                  backgroundColor: option,
+                  boxShadow: color === option ? "0 0 0 2px #fff, 0 0 0 3.5px var(--accent)" : "inset 0 0 0 1px rgba(0,0,0,0.1)",
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={handleSave} className="btn btn-primary flex-1">
+              Save
+            </button>
             <button
-              key={option}
               type="button"
-              aria-label={option}
-              onClick={() => setColor(option)}
-              className="h-5 w-5 rounded-full border border-black/10 ring-offset-2"
-              style={{
-                backgroundColor: option,
-                boxShadow: color === option ? "0 0 0 2px #18181b" : undefined,
-              }}
-            />
-          ))}
+              onClick={() => hideCategory.mutate({ id: category.id, hidden: !category.hidden })}
+              className="btn"
+            >
+              {category.hidden ? "Show" : "Hide"}
+            </button>
+            <button
+              type="button"
+              onClick={() => deleteCategory.mutate(category.id)}
+              className="btn-icon btn-destructive"
+              aria-label="Delete category"
+              style={{ width: 28, height: 28 }}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              updateCategory.mutate({
-                id: category.id,
-                category: {
-                  name,
-                  icon,
-                  color,
-                  sortOrder: category.sortOrder,
-                  hidden: category.hidden,
-                },
-              })
-            }
-            className="rounded-md bg-zinc-900 px-2 py-1.5 text-white"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => hideCategory.mutate({ id: category.id, hidden: !category.hidden })}
-            className="rounded-md border border-zinc-200 px-2 py-1.5 dark:border-zinc-800"
-          >
-            {category.hidden ? "Unhide" : "Hide"}
-          </button>
-          <button
-            type="button"
-            onClick={() => deleteCategory.mutate(category.id)}
-            className="ml-auto rounded-md border border-red-200 px-2 py-1.5 text-red-600"
-            aria-label="Delete category"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
-    </details>
+      ) : null}
+    </div>
   );
 }

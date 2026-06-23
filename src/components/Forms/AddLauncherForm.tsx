@@ -26,21 +26,25 @@ export function AddLauncherForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-2 rounded-[10px] border p-3"
+      style={{ borderColor: "var(--border-subtle)", background: "rgba(0,0,0,0.018)" }}
+    >
       <input
         value={label}
         onChange={(event) => setLabel(event.target.value)}
-        className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900"
-        placeholder="Label"
+        className="field"
+        placeholder="Label (e.g. Cursor)"
       />
       <input
         value={appPath}
         onChange={(event) => setAppPath(event.target.value)}
-        className="rounded-md border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-800 dark:bg-zinc-900"
+        className="field field-mono"
         placeholder="/Applications/App.app"
       />
-      <button type="submit" className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-zinc-900 px-3 text-sm text-white">
-        <Plus size={15} />
+      <button type="submit" className="btn btn-primary w-full">
+        <Plus size={13} />
         Add Launcher
       </button>
     </form>

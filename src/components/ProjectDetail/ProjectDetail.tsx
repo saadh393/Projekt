@@ -1,5 +1,6 @@
-import { CalendarClock, Folder, Pencil, Tag } from "lucide-react";
+import { CalendarClock, Eye, EyeOff, Folder, Pencil, Tag } from "lucide-react";
 import { findCategoryName } from "../../lib/categoryUtils";
+import { useProjectActions } from "../../hooks/useProjects";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { AppLauncher, Category, CommandTemplate, Project } from "../../lib/types";
 import { ActionBar } from "./ActionBar";
@@ -19,71 +20,135 @@ export function ProjectDetail({
   commandTemplates,
 }: ProjectDetailProps) {
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
-
-  if (!project) {
-    return (
-      <section className="hidden h-screen w-96 shrink-0 border-l border-white/70 bg-white/45 px-5 py-5 text-zinc-500 backdrop-blur-2xl dark:border-zinc-800 dark:bg-zinc-950 lg:block">
-        <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-white bg-white/35 text-sm dark:border-zinc-800">
-          Select a project
-        </div>
-      </section>
-    );
-  }
+  const { hideProject } = useProjectActions();
 
   return (
-    <section className="hidden h-screen w-96 shrink-0 overflow-y-auto border-l border-white/70 bg-white/45 px-5 py-5 backdrop-blur-2xl dark:border-zinc-800 dark:bg-zinc-950 lg:block">
-      <div className="mb-5">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: project.color }} />
-        <span className="rounded-lg bg-white/80 px-2 py-1 text-xs text-zinc-600 shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
-            {findCategoryName(categories, project.categoryId)}
-          </span>
-        </div>
-        <div className="flex items-start gap-3">
-          <h2 className="min-w-0 flex-1 break-words text-2xl font-semibold text-zinc-950 dark:text-white">{project.name}</h2>
-          <button
-            type="button"
-            onClick={() => setEditingProjectId(project.id)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white bg-white/85 text-zinc-600 shadow-sm transition-transform duration-150 active:scale-[0.97] dark:border-zinc-800 dark:bg-zinc-900"
-            aria-label={`Edit ${project.name}`}
+    <section
+      className="scroll-shell hidden h-screen w-[360px] shrink-0 flex-col overflow-hidden border-l lg:flex"
+      style={{
+        borderColor: "var(--border-subtle)",
+        background: "var(--bg-sidebar)",
+        backdropFilter: "saturate(180%) blur(24px)",
+        WebkitBackdropFilter: "saturate(180%) blur(24px)",
+      }}
+    >
+      <div className="titlebar" data-tauri-drag-region />
+
+      {!project ? (
+        <div
+          className="no-drag flex flex-1 flex-col items-center justify-center px-8 text-center text-[13px]"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          <div
+            className="mb-3 flex h-10 w-10 items-center justify-center rounded-full"
+            style={{ background: "var(--bg-hover)" }}
           >
-            <Pencil size={15} />
-          </button>
+            <Folder size={18} />
+          </div>
+          <span style={{ color: "var(--text-secondary)" }}>Select a project to see details</span>
         </div>
-        <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{project.description}</p>
-      </div>
+      ) : (
+        <div className="no-drag min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-1">
+          <div className="mb-4 flex items-start gap-3">
+            <span
+              className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: project.color }}
+            />
+            <div className="min-w-0 flex-1">
+              <h2
+                className="break-words text-[18px] font-semibold leading-tight"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {project.name}
+              </h2>
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="chip">{findCategoryName(categories, project.categoryId)}</span>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setEditingProjectId(project.id)}
+                className="btn-icon"
+                aria-label={`Edit ${project.name}`}
+                title="Edit"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => hideProject.mutate({ id: project.id, hidden: !project.hidden })}
+                className="btn-icon"
+                aria-label={project.hidden ? "Unhide project" : "Hide project"}
+                title={project.hidden ? "Unhide" : "Hide"}
+              >
+                {project.hidden ? <Eye size={13} /> : <EyeOff size={13} />}
+              </button>
+            </div>
+          </div>
 
-      <ActionBar project={project} launchers={launchers} />
+          {project.description ? (
+            <p
+              className="mb-4 text-[13px] leading-relaxed"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {project.description}
+            </p>
+          ) : null}
 
-      <div className="mt-5 space-y-3 rounded-2xl border border-white bg-white/80 p-3 text-sm shadow-sm shadow-zinc-200/70 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-start gap-2">
-          <Folder size={15} className="mt-0.5 shrink-0 text-zinc-500" />
-          <span className="break-all font-mono text-xs text-zinc-600 dark:text-zinc-300">{project.path}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <CalendarClock size={15} className="text-zinc-500" />
-          <span className="text-zinc-600 dark:text-zinc-300">
-            {project.lastOpenedAt ? new Date(project.lastOpenedAt * 1000).toLocaleString() : "Never opened"}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag size={15} className="text-zinc-500" />
-          {project.tags.length ? (
-            project.tags.map((tag) => (
-              <span key={tag} className="rounded-md bg-zinc-100 px-2 py-1 text-xs dark:bg-zinc-800">
-                {tag}
+          <ActionBar project={project} launchers={launchers} />
+
+          <div
+            className="mt-5 space-y-3 rounded-[10px] border p-3"
+            style={{
+              background: "rgba(255,255,255,0.65)",
+              borderColor: "var(--border-subtle)",
+            }}
+          >
+            <div className="flex items-start gap-2.5">
+              <Folder size={13} className="mt-0.5 shrink-0" style={{ color: "var(--text-tertiary)" }} />
+              <span
+                className="break-all font-mono text-[11px]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {project.path}
               </span>
-            ))
-          ) : (
-            <span className="text-zinc-500">No tags</span>
-          )}
-        </div>
-      </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <CalendarClock size={13} className="shrink-0" style={{ color: "var(--text-tertiary)" }} />
+              <span className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                {project.lastOpenedAt
+                  ? new Date(project.lastOpenedAt * 1000).toLocaleString()
+                  : "Never opened"}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Tag size={13} className="shrink-0" style={{ color: "var(--text-tertiary)" }} />
+              {project.tags.length ? (
+                project.tags.map((tag) => (
+                  <span key={tag} className="chip">
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
+                  No tags
+                </span>
+              )}
+            </div>
+          </div>
 
-      <div className="mt-6">
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Pinned Commands</h3>
-        <CommandRunner project={project} templates={commandTemplates} />
-      </div>
+          <div className="mt-5">
+            <h3
+              className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              Pinned Commands
+            </h3>
+            <CommandRunner project={project} templates={commandTemplates} />
+          </div>
+        </div>
+      )}
     </section>
   );
 }

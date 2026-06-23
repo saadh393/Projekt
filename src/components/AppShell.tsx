@@ -25,7 +25,7 @@ export function AppShell() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f4f2ee] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="flex h-screen overflow-hidden" style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}>
       <Sidebar categories={categories} projects={projects} />
       <ProjectList projects={projects} categories={categories} launchers={launchers} />
       <ProjectDetail

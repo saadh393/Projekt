@@ -8,15 +8,24 @@ export function GeneralTab() {
   const preferredTerminal = data?.preferredTerminal ?? "terminal";
 
   return (
-    <div className="space-y-4">
-      <label className="block space-y-1.5 text-sm">
-        <span className="font-medium">Preferred terminal</span>
+    <div className="space-y-5">
+      <h3 className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>
+        General
+      </h3>
+
+      <label className="block space-y-1.5">
+        <span
+          className="block text-[11px] font-semibold uppercase tracking-wider"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          Preferred terminal
+        </span>
         <select
           value={preferredTerminal}
           onChange={(event) =>
             updateSettings.mutate({ preferredTerminal: event.target.value as TerminalPreference })
           }
-          className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900"
+          className="field appearance-none pr-7"
         >
           {Object.entries(terminalLabels).map(([value, label]) => (
             <option key={value} value={value}>
@@ -24,6 +33,9 @@ export function GeneralTab() {
             </option>
           ))}
         </select>
+        <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+          Used when running pinned commands and opening Terminal.
+        </p>
       </label>
     </div>
   );

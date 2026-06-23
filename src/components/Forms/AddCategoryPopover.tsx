@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Plus } from "lucide-react";
 import { useCreateCategory } from "../../hooks/useCategories";
 import { defaultCategoryIcon, sidebarColors } from "../../lib/constants";
@@ -10,12 +10,33 @@ type AddCategoryPopoverProps = {
 
 export function AddCategoryPopover({ sortOrder }: AddCategoryPopoverProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [icon, setIcon] = useState(defaultCategoryIcon);
   const [iconQuery, setIconQuery] = useState("");
   const [color, setColor] = useState(sidebarColors[0]);
   const createCategory = useCreateCategory();
+  const popoverRef = useRef<HTMLDivElement | null>(null);
   const iconNames = useMemo(() => filterIconNames(iconQuery).slice(0, 10), [iconQuery]);
+
+  useEffect(() => {
+    if (open) {
+      const id = requestAnimationFrame(() => setMounted(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setMounted(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -36,35 +57,38 @@ export function AddCategoryPopover({ sortOrder }: AddCategoryPopoverProps) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={popoverRef}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/70 shadow-sm hover:bg-white dark:hover:bg-zinc-800"
+        className="btn-icon"
         aria-label="Add category"
       >
-        <Plus size={16} />
+        <Plus size={14} />
       </button>
       {open ? (
         <form
           onSubmit={handleSubmit}
-          className="absolute left-0 top-10 z-20 w-64 origin-top-left space-y-3 rounded-2xl border border-white bg-white/95 p-3 shadow-2xl shadow-zinc-950/15 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950"
+          className="popover-panel absolute left-0 top-8 z-30 w-64 space-y-2 p-3"
+          data-state={mounted ? "open" : "closed"}
         >
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-2 py-1.5 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+            className="field"
             placeholder="Category name"
+            autoFocus
           />
           <input
             value={iconQuery}
             onChange={(event) => setIconQuery(event.target.value)}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-2 py-1.5 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+            className="field"
             placeholder="Search icons"
           />
           <div className="grid grid-cols-5 gap-1">
             {iconNames.map((iconName) => {
               const Icon = getCategoryIcon(iconName);
+              const active = icon === iconName;
 
               return (
                 <button
@@ -72,30 +96,34 @@ export function AddCategoryPopover({ sortOrder }: AddCategoryPopoverProps) {
                   type="button"
                   title={iconName}
                   onClick={() => setIcon(iconName)}
-                  className="flex h-8 items-center justify-center rounded-lg border border-zinc-200 hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                  className="flex h-7 items-center justify-center rounded"
+                  style={{
+                    background: active ? "var(--accent-soft)" : "transparent",
+                    color: active ? "var(--accent)" : "var(--text-secondary)",
+                  }}
                 >
-                  <Icon size={15} className={icon === iconName ? "text-blue-600" : ""} />
+                  <Icon size={14} />
                 </button>
               );
             })}
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1.5 pt-1">
             {sidebarColors.map((option) => (
               <button
                 key={option}
                 type="button"
                 aria-label={option}
                 onClick={() => setColor(option)}
-                className="h-5 w-5 rounded-full border border-black/10"
+                className="h-4 w-4 rounded-full"
                 style={{
                   backgroundColor: option,
-                  boxShadow: color === option ? "0 0 0 2px #18181b" : undefined,
+                  boxShadow: color === option ? "0 0 0 2px #fff, 0 0 0 3.5px var(--accent)" : "inset 0 0 0 1px rgba(0,0,0,0.1)",
                 }}
               />
             ))}
           </div>
-          <button type="submit" className="w-full rounded-xl bg-zinc-950 px-3 py-2 text-sm text-white shadow-lg shadow-zinc-950/15">
-            Save Category
+          <button type="submit" className="btn btn-primary w-full">
+            Add Category
           </button>
         </form>
       ) : null}

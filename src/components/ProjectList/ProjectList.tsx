@@ -6,6 +6,7 @@ import { moveItem } from "../../lib/reorder";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { AppLauncher, Category, Project } from "../../lib/types";
 import { ProjectCard } from "./ProjectCard";
+import { ProjectListEmpty } from "./ProjectListEmpty";
 import { ProjectListToolbar } from "./ProjectListToolbar";
 
 type ProjectListProps = {
@@ -31,6 +32,8 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
   const visible = visibleProjects(scoped, showHiddenProjects);
   const filtered = filterProjectsByQuery(visible, categories, searchQuery);
   const sorted = sortProjects(filtered, sortMode);
+  const activeCategory = categories.find((category) => category.id === selectedCategoryId);
+  const heading = activeCategory ? activeCategory.name : "All Projects";
 
   const reorderVisibleProjects = (targetProjectId: string) => {
     if (!draggingProjectId || draggingProjectId === targetProjectId) {
@@ -46,7 +49,23 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
   };
 
   return (
-    <main className="h-screen min-w-0 flex-1 overflow-y-auto bg-transparent text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+    <main
+      className="scroll-shell flex h-screen min-w-0 flex-1 flex-col overflow-hidden"
+      style={{ background: "var(--bg-content)" }}
+    >
+      <div className="titlebar" data-tauri-drag-region />
+
+      <div className="no-drag flex items-end justify-between px-6 pt-1 pb-3">
+        <div>
+          <h1 className="text-[20px] font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            {heading}
+          </h1>
+          <p className="mt-0.5 text-[12px]" style={{ color: "var(--text-tertiary)" }}>
+            {sorted.length} {sorted.length === 1 ? "project" : "projects"}
+          </p>
+        </div>
+      </div>
+
       <ProjectListToolbar
         searchQuery={searchQuery}
         sortMode={sortMode}
@@ -57,16 +76,9 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
         onAddProject={() => setProjectSheetOpen(true)}
       />
 
-      <div className="px-5 py-5">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-            <p className="mt-1 text-sm text-zinc-500">{sorted.length} visible projects</p>
-          </div>
-        </div>
-
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-6">
         {sorted.length ? (
-          <div className="grid gap-3">
+          <div className="list-stagger flex flex-col">
             {sorted.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -83,9 +95,7 @@ export function ProjectList({ projects, categories, launchers }: ProjectListProp
             ))}
           </div>
         ) : (
-          <div className="flex h-72 items-center justify-center rounded-2xl border border-dashed border-white bg-white/45 text-sm text-zinc-500 shadow-sm dark:border-zinc-800">
-            No projects match this view.
-          </div>
+          <ProjectListEmpty onAddProject={() => setProjectSheetOpen(true)} />
         )}
       </div>
     </main>
