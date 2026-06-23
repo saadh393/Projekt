@@ -83,7 +83,7 @@ export function AddLauncherForm() {
         />
         <button type="button" onClick={chooseApp} className="btn">
           <FolderOpen size={13} />
-          Browse
+          Choose...
         </button>
       </div>
       <button type="submit" className="btn btn-primary w-full" disabled={!canSubmit}>

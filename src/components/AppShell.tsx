@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AddProjectSheet } from "./Forms/AddProjectSheet";
+import { EditCategoryModal } from "./Forms/EditCategoryModal";
 import { ProjectDetail } from "./ProjectDetail/ProjectDetail";
 import { ProjectDetailSheet } from "./ProjectDetail/ProjectDetailSheet";
 import { ProjectList } from "./ProjectList/ProjectList";
@@ -8,6 +9,7 @@ import { Sidebar } from "./Sidebar/Sidebar";
 import { Titlebar } from "./Titlebar";
 import { useCategories } from "../hooks/useCategories";
 import { useCommandTemplates } from "../hooks/useCommandTemplates";
+import { useDisableContextMenu } from "../hooks/useDisableContextMenu";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useLaunchers } from "../hooks/useLaunchers";
 import { useProjects } from "../hooks/useProjects";
@@ -17,6 +19,7 @@ const NARROW_BREAKPOINT = 1024;
 
 export function AppShell() {
   useKeyboardShortcuts();
+  useDisableContextMenu();
 
   const { data: projects = [] } = useProjects();
   const { data: categories = [] } = useCategories();
@@ -68,6 +71,7 @@ export function AppShell() {
         commandTemplates={commandTemplates}
         projects={projects}
       />
+      <EditCategoryModal categories={categories} />
       <Settings />
     </div>
   );

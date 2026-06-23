@@ -9,6 +9,7 @@ type ProjectUiState = {
   showHiddenProjects: boolean;
   isProjectSheetOpen: boolean;
   editingProjectId: string | null;
+  editingCategoryId: string | null;
   isSettingsOpen: boolean;
   settingsTab: "general" | "launchers" | "commands";
   setSelectedCategoryId: (selectedCategoryId: string) => void;
@@ -18,6 +19,7 @@ type ProjectUiState = {
   setShowHiddenProjects: (showHiddenProjects: boolean) => void;
   setProjectSheetOpen: (isProjectSheetOpen: boolean) => void;
   setEditingProjectId: (editingProjectId: string | null) => void;
+  setEditingCategoryId: (editingCategoryId: string | null) => void;
   setSettingsOpen: (isSettingsOpen: boolean) => void;
   setSettingsTab: (settingsTab: "general" | "launchers" | "commands") => void;
 };
@@ -30,6 +32,7 @@ export const useProjectUiStore = create<ProjectUiState>((set) => ({
   showHiddenProjects: false,
   isProjectSheetOpen: false,
   editingProjectId: null,
+  editingCategoryId: null,
   isSettingsOpen: false,
   settingsTab: "general",
   setSelectedCategoryId: (selectedCategoryId) => set({ selectedCategoryId }),
@@ -44,6 +47,7 @@ export const useProjectUiStore = create<ProjectUiState>((set) => ({
     })),
   setEditingProjectId: (editingProjectId) =>
     set({ editingProjectId, isProjectSheetOpen: editingProjectId !== null }),
+  setEditingCategoryId: (editingCategoryId) => set({ editingCategoryId }),
   setSettingsOpen: (isSettingsOpen) => set({ isSettingsOpen }),
   setSettingsTab: (settingsTab) => set({ settingsTab }),
 }));

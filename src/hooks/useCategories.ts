@@ -29,11 +29,6 @@ export const useCategoryActions = () => {
         api.updateCategory(id, category),
       onSuccess: invalidate,
     }),
-    hideCategory: useMutation({
-      mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) =>
-        api.hideCategory(id, hidden),
-      onSuccess: invalidate,
-    }),
     deleteCategory: useMutation({
       mutationFn: (id: string) => api.deleteCategory(id),
       onSuccess: invalidate,

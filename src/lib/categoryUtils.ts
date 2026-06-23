@@ -3,8 +3,7 @@ import type { Category, Project } from "./types";
 export const sortCategories = (categories: Category[]) =>
   [...categories].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
 
-export const visibleCategories = (categories: Category[]) =>
-  sortCategories(categories).filter((category) => !category.hidden);
+export const visibleCategories = (categories: Category[]) => sortCategories(categories);
 
 export const countProjectsByCategory = (projects: Project[]) =>
   projects.reduce<Record<string, number>>((counts, project) => {

@@ -5,7 +5,6 @@ import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { Category, Project } from "../../lib/types";
 import { AddCategoryPopover } from "../Forms/AddCategoryPopover";
 import { CategoryItem } from "./CategoryItem";
-import { CategoryMenu } from "./CategoryMenu";
 
 type SidebarProps = {
   categories: Category[];
@@ -19,7 +18,6 @@ export function Sidebar({ categories, projects }: SidebarProps) {
   const setSettingsOpen = useProjectUiStore((state) => state.setSettingsOpen);
   const counts = countProjectsByCategory(projects);
   const visible = visibleCategories(categories);
-  const activeCategory = categories.find((category) => category.id === selectedCategoryId);
   const allCount = projects.filter((project) => !project.hidden).length;
   const isAllSelected = selectedCategoryId === allProjectsCategoryId;
 
@@ -95,12 +93,7 @@ export function Sidebar({ categories, projects }: SidebarProps) {
       </div>
 
       <div className="border-t px-2 py-2" style={{ borderColor: "var(--border-divider)" }}>
-        {activeCategory ? <CategoryMenu category={activeCategory} /> : null}
-        <button
-          type="button"
-          onClick={() => setSettingsOpen(true)}
-          className="row"
-        >
+        <button type="button" onClick={() => setSettingsOpen(true)} className="row">
           <Settings size={14} style={{ color: "var(--text-secondary)" }} />
           <span className="min-w-0 flex-1 truncate text-[13px]">Settings</span>
         </button>

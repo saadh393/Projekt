@@ -1,7 +1,13 @@
-import { EyeOff, GripVertical } from "lucide-react";
+import { useMemo, type MouseEvent } from "react";
+import { Code2, Eye, EyeOff, FolderOpen, GripVertical, Pencil, Terminal } from "lucide-react";
 import { findCategoryName } from "../../lib/categoryUtils";
 import { cx } from "../../lib/cx";
 import type { AppLauncher, Category, Project } from "../../lib/types";
+import type { ContextMenuOption } from "../../lib/contextMenuTypes";
+import { useContextMenu } from "../../hooks/useContextMenu";
+import { useProjectActions } from "../../hooks/useProjects";
+import { useProjectUiStore } from "../../store/useProjectUiStore";
+import { ContextMenu } from "../ContextMenu/ContextMenu";
 
 type ProjectCardProps = {
   project: Project;
@@ -26,6 +32,55 @@ export function ProjectCard({
   onDrop,
 }: ProjectCardProps) {
   const categoryName = findCategoryName(categories, project.categoryId);
+  const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
+  const { hideProject, openFinder, openVsCode, openTerminal } = useProjectActions();
+  const { position, open, close } = useContextMenu();
+
+  const options = useMemo<ContextMenuOption[]>(
+    () => [
+      {
+        kind: "action",
+        id: "finder",
+        label: "Open in Finder",
+        icon: <FolderOpen size={14} />,
+        onSelect: () => openFinder.mutate(project.id),
+      },
+      {
+        kind: "action",
+        id: "vscode",
+        label: "Open in VS Code",
+        icon: <Code2 size={14} />,
+        onSelect: () => openVsCode.mutate(project.id),
+      },
+      {
+        kind: "action",
+        id: "terminal",
+        label: "Open in Terminal",
+        icon: <Terminal size={14} />,
+        onSelect: () => openTerminal.mutate(project.id),
+      },
+      { kind: "separator", id: "sep-1" },
+      {
+        kind: "action",
+        id: "edit",
+        label: "Edit Project…",
+        icon: <Pencil size={14} />,
+        onSelect: () => setEditingProjectId(project.id),
+      },
+      {
+        kind: "action",
+        id: "hide",
+        label: project.hidden ? "Unhide Project" : "Hide Project",
+        icon: project.hidden ? <Eye size={14} /> : <EyeOff size={14} />,
+        onSelect: () => hideProject.mutate({ id: project.id, hidden: !project.hidden }),
+      },
+    ],
+    [project.id, project.hidden, openFinder, openVsCode, openTerminal, hideProject, setEditingProjectId],
+  );
+
+  const handleContextMenu = (event: MouseEvent) => {
+    open(event);
+  };
 
   return (
     <div
@@ -45,7 +100,13 @@ export function ProjectCard({
       }}
       className={cx("group", project.hidden ? "opacity-60" : "")}
     >
-      <button type="button" onClick={onSelect} className="row" data-selected={selected}>
+      <button
+        type="button"
+        onClick={onSelect}
+        onContextMenu={handleContextMenu}
+        className="row"
+        data-selected={selected}
+      >
         {manualMode ? (
           <GripVertical
             size={12}
@@ -90,6 +151,8 @@ export function ProjectCard({
           {categoryName ? <span className="chip">{categoryName}</span> : null}
         </div>
       </button>
+
+      <ContextMenu position={position} options={options} onClose={close} />
     </div>
   );
 }
