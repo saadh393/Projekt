@@ -5,6 +5,7 @@ import { ProjectDetailSheet } from "./ProjectDetail/ProjectDetailSheet";
 import { ProjectList } from "./ProjectList/ProjectList";
 import { Settings } from "./Settings/Settings";
 import { Sidebar } from "./Sidebar/Sidebar";
+import { Titlebar } from "./Titlebar";
 import { useCategories } from "../hooks/useCategories";
 import { useCommandTemplates } from "../hooks/useCommandTemplates";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -42,7 +43,7 @@ export function AppShell() {
       className="relative flex h-screen overflow-hidden"
       style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}
     >
-      <div className="titlebar" data-tauri-drag-region />
+      <Titlebar />
 
       <Sidebar categories={categories} projects={projects} />
       <ProjectList projects={projects} categories={categories} launchers={launchers} />

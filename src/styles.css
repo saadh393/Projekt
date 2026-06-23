@@ -202,6 +202,10 @@ a {
   background: var(--accent-hover);
 }
 
+.btn:disabled {
+  opacity: 0.5;
+}
+
 .btn-ghost {
   background: transparent;
   border-color: transparent;
