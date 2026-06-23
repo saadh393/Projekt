@@ -8,6 +8,7 @@ export type ContextMenuAction = {
   onSelect: () => void;
   destructive?: boolean;
   disabled?: boolean;
+  checked?: boolean;
 };
 
 export type ContextMenuSeparator = {

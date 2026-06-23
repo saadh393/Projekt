@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { cx } from "../../lib/cx";
 import type { ContextMenuAction } from "../../lib/contextMenuTypes";
 
@@ -20,6 +21,11 @@ export function ContextMenuItem({ action, onSelect }: ContextMenuItemProps) {
     >
       {action.icon ? <span className="context-menu-icon">{action.icon}</span> : null}
       <span className="min-w-0 flex-1 truncate">{action.label}</span>
+      {action.checked ? (
+        <span className="context-menu-check">
+          <Check size={12} strokeWidth={2.5} />
+        </span>
+      ) : null}
     </button>
   );
 }

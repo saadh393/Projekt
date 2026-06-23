@@ -49,7 +49,7 @@ export function AppShell() {
       <Titlebar />
 
       <Sidebar categories={categories} projects={projects} />
-      <ProjectList projects={projects} categories={categories} launchers={launchers} />
+      <ProjectList projects={projects} categories={categories} />
       {isNarrow ? null : (
         <ProjectDetail
           project={selectedProject}

@@ -10,6 +10,7 @@ type ProjectUiState = {
   isProjectSheetOpen: boolean;
   editingProjectId: string | null;
   editingCategoryId: string | null;
+  editingDividerId: string | null;
   isSettingsOpen: boolean;
   settingsTab: "general" | "launchers" | "commands";
   isReorderingProjects: boolean;
@@ -22,6 +23,7 @@ type ProjectUiState = {
   setProjectSheetOpen: (isProjectSheetOpen: boolean) => void;
   setEditingProjectId: (editingProjectId: string | null) => void;
   setEditingCategoryId: (editingCategoryId: string | null) => void;
+  setEditingDividerId: (editingDividerId: string | null) => void;
   setSettingsOpen: (isSettingsOpen: boolean) => void;
   setSettingsTab: (settingsTab: "general" | "launchers" | "commands") => void;
   setReorderingProjects: (value: boolean) => void;
@@ -37,6 +39,7 @@ export const useProjectUiStore = create<ProjectUiState>((set) => ({
   isProjectSheetOpen: false,
   editingProjectId: null,
   editingCategoryId: null,
+  editingDividerId: null,
   isSettingsOpen: false,
   settingsTab: "general",
   isReorderingProjects: false,
@@ -54,6 +57,7 @@ export const useProjectUiStore = create<ProjectUiState>((set) => ({
   setEditingProjectId: (editingProjectId) =>
     set({ editingProjectId, isProjectSheetOpen: editingProjectId !== null }),
   setEditingCategoryId: (editingCategoryId) => set({ editingCategoryId }),
+  setEditingDividerId: (editingDividerId) => set({ editingDividerId }),
   setSettingsOpen: (isSettingsOpen) => set({ isSettingsOpen }),
   setSettingsTab: (settingsTab) => set({ settingsTab }),
   setReorderingProjects: (value) =>

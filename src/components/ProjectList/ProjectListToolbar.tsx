@@ -1,30 +1,68 @@
-import { ArrowUpDown, Check, Eye, EyeOff, Plus, Search } from "lucide-react";
+import { useMemo } from "react";
+import { ArrowUpDown, Eye, EyeOff, Minus, Plus, Search } from "lucide-react";
 import { sortLabels } from "../../lib/constants";
+import type { ContextMenuOption } from "../../lib/contextMenuTypes";
 import type { SortMode } from "../../lib/types";
+import { OverflowMenu } from "../OverflowMenu/OverflowMenu";
 
 type ProjectListToolbarProps = {
   searchQuery: string;
   sortMode: SortMode;
   showHiddenProjects: boolean;
   isReordering: boolean;
+  canAddDivider: boolean;
   onSearchChange: (value: string) => void;
   onSortChange: (value: SortMode) => void;
   onShowHiddenChange: (value: boolean) => void;
   onReorderToggle: (value: boolean) => void;
+  onAddDivider: () => void;
   onAddProject: () => void;
-};
+}
 
 export function ProjectListToolbar({
   searchQuery,
   sortMode,
   showHiddenProjects,
   isReordering,
+  canAddDivider,
   onSearchChange,
   onSortChange,
   onShowHiddenChange,
   onReorderToggle,
+  onAddDivider,
   onAddProject,
 }: ProjectListToolbarProps) {
+  const overflowOptions = useMemo<ContextMenuOption[]>(
+    () => [
+      {
+        kind: "action",
+        id: "reorder",
+        label: isReordering ? "Done Reordering" : "Reorder Items",
+        icon: <ArrowUpDown size={14} />,
+        checked: isReordering,
+        onSelect: () => onReorderToggle(!isReordering),
+      },
+      {
+        kind: "action",
+        id: "hidden",
+        label: showHiddenProjects ? "Hide Hidden Projects" : "Show Hidden Projects",
+        icon: showHiddenProjects ? <Eye size={14} /> : <EyeOff size={14} />,
+        checked: showHiddenProjects,
+        onSelect: () => onShowHiddenChange(!showHiddenProjects),
+      },
+      { kind: "separator", id: "sep-1" },
+      {
+        kind: "action",
+        id: "divider",
+        label: "Add Divider",
+        icon: <Minus size={14} />,
+        disabled: !canAddDivider,
+        onSelect: onAddDivider,
+      },
+    ],
+    [isReordering, showHiddenProjects, canAddDivider, onReorderToggle, onShowHiddenChange, onAddDivider],
+  );
+
   return (
     <div className="flex items-center gap-2 px-6 pb-3">
       <label className="relative min-w-0 flex-1">
@@ -62,38 +100,7 @@ export function ProjectListToolbar({
         </span>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onShowHiddenChange(!showHiddenProjects)}
-        className="btn"
-        title={showHiddenProjects ? "Hide hidden projects" : "Show hidden projects"}
-        aria-pressed={showHiddenProjects}
-        style={{
-          background: showHiddenProjects ? "var(--accent-soft)" : undefined,
-          color: showHiddenProjects ? "var(--accent)" : undefined,
-          borderColor: showHiddenProjects ? "transparent" : undefined,
-        }}
-      >
-        {showHiddenProjects ? <Eye size={13} /> : <EyeOff size={13} />}
-        Hidden
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onReorderToggle(!isReordering)}
-        className="btn"
-        title={isReordering ? "Finish reordering" : "Reorder projects"}
-        aria-pressed={isReordering}
-        style={{
-          background: isReordering ? "var(--accent)" : undefined,
-          color: isReordering ? "#fff" : undefined,
-          borderColor: isReordering ? "transparent" : undefined,
-          boxShadow: isReordering ? "0 1px 2px rgba(10,132,255,0.28)" : undefined,
-        }}
-      >
-        {isReordering ? <Check size={13} /> : <ArrowUpDown size={13} />}
-        {isReordering ? "Done" : "Reorder"}
-      </button>
+      <OverflowMenu options={overflowOptions} label="More options" />
 
       <button type="button" onClick={onAddProject} className="btn btn-primary">
         <Plus size={13} />

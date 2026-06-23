@@ -71,6 +71,40 @@ textarea,
   cursor: text;
 }
 
+.list-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 6px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: default;
+}
+
+.list-divider-empty {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.list-divider-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  padding-right: 4px;
+}
+
+.list-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
 .reorder-controls {
   position: absolute;
   right: 6px;
@@ -578,6 +612,19 @@ a {
   justify-content: center;
   color: var(--text-secondary);
   flex-shrink: 0;
+}
+
+.context-menu-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.context-menu-item:hover:not(:disabled) .context-menu-check {
+  color: #fff;
 }
 
 .context-menu-separator {

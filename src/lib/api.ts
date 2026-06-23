@@ -5,10 +5,13 @@ import type {
   CategoryDraft,
   CommandTemplate,
   CommandTemplateDraft,
+  Divider,
+  DividerDraft,
   GeneralSettings,
   LauncherDraft,
   Project,
   ProjectDraft,
+  ReorderItem,
   TerminalPreference,
 } from "./types";
 
@@ -48,6 +51,16 @@ export const api = {
   createLauncher: (launcher: LauncherDraft) =>
     call<AppLauncher>("create_app_launcher", { input: launcher }),
   deleteLauncher: (id: string) => call<void>("delete_app_launcher", { id }),
+
+  listDividers: (categoryId: string | null) =>
+    call<Divider[]>("list_dividers", { categoryId }),
+  createDivider: (divider: DividerDraft) =>
+    call<Divider>("create_divider", { input: divider }),
+  updateDivider: (id: string, divider: Partial<DividerDraft>) =>
+    call<Divider>("update_divider", { id, input: divider }),
+  deleteDivider: (id: string) => call<void>("delete_divider", { id }),
+  reorderListItems: (items: ReorderItem[]) =>
+    call<void>("reorder_list_items", { items }),
 
   listCommandTemplates: () => call<CommandTemplate[]>("list_command_templates"),
   createCommandTemplate: (template: CommandTemplateDraft) =>

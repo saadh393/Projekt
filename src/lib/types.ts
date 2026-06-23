@@ -44,6 +44,29 @@ export type CommandTemplate = {
   command: string;
 };
 
+export type Divider = {
+  id: EntityId;
+  label: string | null;
+  categoryId: EntityId | null;
+  sortOrder: number;
+  createdAt: number;
+};
+
+export type DividerDraft = {
+  label: string | null;
+  categoryId: EntityId | null;
+  sortOrder?: number;
+};
+
+export type ReorderItem = {
+  kind: "project" | "divider";
+  id: EntityId;
+};
+
+export type ListItem =
+  | { kind: "project"; item: Project }
+  | { kind: "divider"; item: Divider };
+
 export type GeneralSettings = {
   preferredTerminal: TerminalPreference;
 };
