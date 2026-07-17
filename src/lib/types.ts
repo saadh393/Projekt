@@ -3,6 +3,8 @@ export type EntityId = string;
 export type SortMode = "manual" | "name" | "createdAt" | "lastOpenedAt";
 
 export type TerminalPreference = "terminal" | "iterm2" | "warp";
+export type ShellPreference = "bash" | "zsh" | "powershell" | "cmd";
+export type CommandExecutionTarget = "external" | "embedded";
 
 export type Category = {
   id: EntityId;
@@ -25,7 +27,6 @@ export type Project = {
   sortOrder: number;
   hidden: boolean;
   tags: string[];
-  pinnedCommands: EntityId[];
   lastOpenedAt: number | null;
   createdAt: number;
   updatedAt: number;
@@ -42,6 +43,8 @@ export type CommandTemplate = {
   id: EntityId;
   label: string;
   command: string;
+  projectId: EntityId | null;
+  executionTarget: CommandExecutionTarget;
 };
 
 export type Divider = {
@@ -69,6 +72,8 @@ export type ListItem =
 
 export type GeneralSettings = {
   preferredTerminal: TerminalPreference;
+  preferredShell: ShellPreference;
+  availableShells: ShellPreference[];
 };
 
 export type ProjectDraft = {
@@ -78,7 +83,6 @@ export type ProjectDraft = {
   categoryId: EntityId | null;
   color: string;
   tags: string[];
-  pinnedCommands: EntityId[];
   hidden?: boolean;
   sortOrder?: number;
 };
@@ -99,4 +103,16 @@ export type LauncherDraft = {
 export type CommandTemplateDraft = {
   label: string;
   command: string;
+  projectId: EntityId | null;
+  executionTarget: CommandExecutionTarget;
 };
+
+export type TerminalSession = {
+  id: EntityId;
+  projectId: EntityId;
+  label: string;
+};
+
+export type CommandRunResult =
+  | { kind: "external" }
+  | { kind: "embedded"; session: TerminalSession };

@@ -3,12 +3,13 @@ mod db;
 mod models;
 
 use db::Database;
-use tauri::Manager;
+use tauri::{Manager, RunEvent};
 
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .manage(commands::terminal::TerminalManager::default())
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
             let database = Database::open(&app_data_dir)?;
@@ -35,7 +36,6 @@ pub fn run() {
             commands::project::create_project,
             commands::project::update_project,
             commands::project::set_project_hidden,
-            commands::project::set_project_pinned_commands,
             commands::project::reorder_projects,
             commands::project::delete_project,
             commands::tag::list_tags,
@@ -49,14 +49,31 @@ pub fn run() {
             commands::command_template::create_command_template,
             commands::command_template::update_command_template,
             commands::command_template::delete_command_template,
+            commands::command_template::reorder_project_commands,
+            commands::preferences::get_project_sort_mode,
+            commands::preferences::set_project_sort_mode,
+            commands::preferences::get_show_hidden_projects,
+            commands::preferences::set_show_hidden_projects,
             commands::shell::get_preferred_terminal,
             commands::shell::set_preferred_terminal,
+            commands::shell::get_preferred_shell,
+            commands::shell::set_preferred_shell,
+            commands::shell::list_available_shells,
             commands::shell::open_project_in_finder,
             commands::shell::open_project_in_vscode,
             commands::shell::open_project_in_terminal,
             commands::shell::launch_project_app,
-            commands::shell::run_project_command_template,
+            commands::terminal::run_project_command_template,
+            commands::terminal::write_terminal_session,
+            commands::terminal::resize_terminal_session,
+            commands::terminal::kill_terminal_session,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if matches!(event, RunEvent::Exit | RunEvent::ExitRequested { .. }) {
+                app.state::<commands::terminal::TerminalManager>()
+                    .kill_all();
+            }
+        });
 }

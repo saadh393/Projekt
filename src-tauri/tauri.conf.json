@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "Projekt",
+        "url": "app.html",
         "width": 980,
         "height": 760,
         "minWidth": 980,

@@ -6,16 +6,15 @@ import { useMountTransition } from "../../hooks/useMountTransition";
 import { emptyProjectDraft, projectAccentColors } from "../../lib/constants";
 import { formatTags, parseTags, pathBasename } from "../../lib/formUtils";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
-import type { Category, CommandTemplate, Project, ProjectDraft } from "../../lib/types";
+import type { Category, Project, ProjectDraft } from "../../lib/types";
 import { SheetField } from "./SheetField";
 
 type AddProjectSheetProps = {
   categories: Category[];
-  commandTemplates: CommandTemplate[];
   projects: Project[];
 };
 
-export function AddProjectSheet({ categories, commandTemplates, projects }: AddProjectSheetProps) {
+export function AddProjectSheet({ categories, projects }: AddProjectSheetProps) {
   const isOpen = useProjectUiStore((state) => state.isProjectSheetOpen);
   const setOpen = useProjectUiStore((state) => state.setProjectSheetOpen);
   const selectedCategoryId = useProjectUiStore((state) => state.selectedCategoryId);
@@ -37,7 +36,6 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
           categoryId: editingProject.categoryId,
           color: editingProject.color,
           tags: editingProject.tags,
-          pinnedCommands: editingProject.pinnedCommands,
           hidden: editingProject.hidden,
           sortOrder: editingProject.sortOrder,
         });
@@ -197,54 +195,6 @@ export function AddProjectSheet({ categories, commandTemplates, projects }: AddP
             </div>
           </SheetField>
 
-          <SheetField label="Pinned Commands">
-            {commandTemplates.length ? (
-              <div className="space-y-1.5">
-                {commandTemplates.map((template) => {
-                  const checked = draft.pinnedCommands.includes(template.id);
-
-                  return (
-                    <label
-                      key={template.id}
-                      className="flex cursor-default items-start gap-2.5 rounded-[8px] border bg-white px-3 py-2 text-[13px]"
-                      style={{ borderColor: "var(--border-subtle)" }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) => {
-                          const pinnedCommands = event.target.checked
-                            ? [...draft.pinnedCommands, template.id]
-                            : draft.pinnedCommands.filter((id) => id !== template.id);
-                          updateDraft("pinnedCommands", pinnedCommands);
-                        }}
-                        className="mt-0.5 accent-[color:var(--accent)]"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-medium">{template.label}</span>
-                        <span
-                          className="block truncate font-mono text-[11px]"
-                          style={{ color: "var(--text-tertiary)" }}
-                        >
-                          {template.command}
-                        </span>
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            ) : (
-              <p
-                className="rounded-[8px] border border-dashed px-3 py-3 text-[12px]"
-                style={{
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-tertiary)",
-                }}
-              >
-                Create command templates in Settings.
-              </p>
-            )}
-          </SheetField>
         </div>
 
         <div

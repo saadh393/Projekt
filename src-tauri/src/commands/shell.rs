@@ -8,6 +8,7 @@ use crate::commands::project::mark_project_opened;
 use crate::db::Database;
 
 const PREFERRED_TERMINAL_KEY: &str = "preferred_terminal";
+const PREFERRED_SHELL_KEY: &str = "preferred_shell";
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,6 +35,71 @@ impl PreferredTerminal {
             _ => Self::Terminal,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PreferredShell {
+    Bash,
+    Zsh,
+    Powershell,
+    Cmd,
+}
+
+impl PreferredShell {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Bash => "bash",
+            Self::Zsh => "zsh",
+            Self::Powershell => "powershell",
+            Self::Cmd => "cmd",
+        }
+    }
+
+    fn from_str(value: &str) -> Self {
+        available_shells()
+            .into_iter()
+            .find(|shell| shell.as_str() == value)
+            .unwrap_or_else(default_shell)
+    }
+}
+
+#[tauri::command]
+pub fn get_preferred_shell(db: State<'_, Database>) -> Result<PreferredShell, String> {
+    preferred_shell(&db).map_err(command_error)
+}
+
+#[tauri::command]
+pub fn set_preferred_shell(
+    db: State<'_, Database>,
+    shell: PreferredShell,
+) -> Result<PreferredShell, String> {
+    if !available_shells()
+        .iter()
+        .any(|available| available.as_str() == shell.as_str())
+    {
+        return Err("shell is not available on this operating system".to_string());
+    }
+
+    db.with_connection(|connection| {
+        connection.execute(
+            "INSERT INTO preferences (key, value)
+             VALUES (:key, :value)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            named_params! {
+                ":key": PREFERRED_SHELL_KEY,
+                ":value": shell.as_str(),
+            },
+        )?;
+
+        Ok(shell)
+    })
+    .map_err(command_error)
+}
+
+#[tauri::command]
+pub fn list_available_shells() -> Vec<PreferredShell> {
+    available_shells()
 }
 
 #[tauri::command]
@@ -123,21 +189,6 @@ pub fn launch_project_app(
     mark_opened(&db, &project_id).map_err(command_error)
 }
 
-#[tauri::command]
-pub fn run_project_command_template(
-    app: AppHandle,
-    db: State<'_, Database>,
-    project_id: String,
-    template_id: String,
-) -> Result<(), String> {
-    let path = project_path(&db, &project_id).map_err(command_error)?;
-    let command = command_template(&db, &template_id).map_err(command_error)?;
-    let terminal = preferred_terminal(&db).map_err(command_error)?;
-
-    open_terminal(&app, &path, Some(&command), terminal).map_err(command_error)?;
-    mark_opened(&db, &project_id).map_err(command_error)
-}
-
 fn project_path(db: &Database, project_id: &str) -> anyhow::Result<String> {
     db.with_connection(|connection| {
         connection
@@ -164,20 +215,7 @@ fn launcher_path(db: &Database, launcher_id: &str) -> anyhow::Result<String> {
     })
 }
 
-fn command_template(db: &Database, template_id: &str) -> anyhow::Result<String> {
-    db.with_connection(|connection| {
-        connection
-            .query_row(
-                "SELECT command FROM command_templates WHERE id = :id",
-                named_params! { ":id": template_id },
-                |row| row.get::<_, String>("command"),
-            )
-            .optional()?
-            .ok_or_else(|| anyhow::anyhow!("command template not found"))
-    })
-}
-
-fn preferred_terminal(db: &Database) -> anyhow::Result<PreferredTerminal> {
+pub(crate) fn preferred_terminal(db: &Database) -> anyhow::Result<PreferredTerminal> {
     db.with_connection(|connection| {
         let value = connection
             .query_row(
@@ -192,6 +230,57 @@ fn preferred_terminal(db: &Database) -> anyhow::Result<PreferredTerminal> {
             .map(PreferredTerminal::from_str)
             .unwrap_or(PreferredTerminal::Terminal))
     })
+}
+
+pub(crate) fn preferred_shell(db: &Database) -> anyhow::Result<PreferredShell> {
+    db.with_connection(|connection| {
+        let value = connection
+            .query_row(
+                "SELECT value FROM preferences WHERE key = :key",
+                named_params! { ":key": PREFERRED_SHELL_KEY },
+                |row| row.get::<_, String>("value"),
+            )
+            .optional()?;
+
+        Ok(value
+            .as_deref()
+            .map(PreferredShell::from_str)
+            .unwrap_or_else(default_shell))
+    })
+}
+
+fn default_shell() -> PreferredShell {
+    #[cfg(target_os = "windows")]
+    {
+        PreferredShell::Powershell
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        PreferredShell::Zsh
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        PreferredShell::Bash
+    }
+}
+
+fn available_shells() -> Vec<PreferredShell> {
+    #[cfg(target_os = "windows")]
+    {
+        vec![PreferredShell::Powershell, PreferredShell::Cmd]
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        vec![PreferredShell::Zsh, PreferredShell::Bash]
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        vec![PreferredShell::Bash, PreferredShell::Zsh]
+    }
 }
 
 fn mark_opened(db: &Database, project_id: &str) -> anyhow::Result<()> {
@@ -255,7 +344,7 @@ fn open_launcher(app: &AppHandle, app_path: &str, project_path: &str) -> anyhow:
     }
 }
 
-fn open_terminal(
+pub(crate) fn open_terminal(
     app: &AppHandle,
     path: &str,
     command: Option<&str>,

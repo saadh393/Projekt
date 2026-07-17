@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { AddProjectSheet } from "./Forms/AddProjectSheet";
 import { EditCategoryModal } from "./Forms/EditCategoryModal";
 import { ProjectDetail } from "./ProjectDetail/ProjectDetail";
@@ -8,25 +8,32 @@ import { Settings } from "./Settings/Settings";
 import { Sidebar } from "./Sidebar/Sidebar";
 import { Titlebar } from "./Titlebar";
 import { useCategories } from "../hooks/useCategories";
-import { useCommandTemplates } from "../hooks/useCommandTemplates";
 import { useDisableContextMenu } from "../hooks/useDisableContextMenu";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useLaunchers } from "../hooks/useLaunchers";
+import { usePreferencesHydration } from "../hooks/usePreferencesHydration";
 import { useProjects } from "../hooks/useProjects";
+import { useTerminalEvents } from "../hooks/useTerminalEvents";
 import { useProjectUiStore } from "../store/useProjectUiStore";
+import { useTerminalStore } from "../store/useTerminalStore";
 
 const NARROW_BREAKPOINT = 1024;
+const TerminalPanel = lazy(() =>
+  import("./Terminal/TerminalPanel").then((module) => ({ default: module.TerminalPanel })),
+);
 
 export function AppShell() {
   useKeyboardShortcuts();
   useDisableContextMenu();
+  useTerminalEvents();
+  usePreferencesHydration();
 
   const { data: projects = [] } = useProjects();
   const { data: categories = [] } = useCategories();
   const { data: launchers = [] } = useLaunchers();
-  const { data: commandTemplates = [] } = useCommandTemplates();
   const selectedProjectId = useProjectUiStore((state) => state.selectedProjectId);
   const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
+  const hasTerminalSessions = useTerminalStore((state) => state.sessions.length > 0);
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? null,
     [projects, selectedProjectId],
@@ -43,32 +50,32 @@ export function AppShell() {
 
   return (
     <div
-      className="relative flex h-screen overflow-hidden"
+      className="relative flex h-screen flex-col overflow-hidden"
       style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}
     >
       <Titlebar />
 
-      <Sidebar categories={categories} projects={projects} />
-      <ProjectList projects={projects} categories={categories} />
-      {isNarrow ? null : (
-        <ProjectDetail
-          project={selectedProject}
-          categories={categories}
-          launchers={launchers}
-          commandTemplates={commandTemplates}
-        />
-      )}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <Sidebar categories={categories} projects={projects} />
+        <ProjectList projects={projects} categories={categories} />
+        {isNarrow ? null : (
+          <ProjectDetail
+            project={selectedProject}
+            categories={categories}
+            launchers={launchers}
+          />
+        )}
+      </div>
+      <Suspense fallback={null}>{hasTerminalSessions ? <TerminalPanel /> : null}</Suspense>
       <ProjectDetailSheet
         open={isNarrow && Boolean(selectedProject)}
         project={selectedProject}
         categories={categories}
         launchers={launchers}
-        commandTemplates={commandTemplates}
         onClose={() => setSelectedProjectId(null)}
       />
       <AddProjectSheet
         categories={categories}
-        commandTemplates={commandTemplates}
         projects={projects}
       />
       <EditCategoryModal categories={categories} />

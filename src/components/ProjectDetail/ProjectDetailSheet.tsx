@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useMountTransition } from "../../hooks/useMountTransition";
-import type { AppLauncher, Category, CommandTemplate, Project } from "../../lib/types";
+import type { AppLauncher, Category, Project } from "../../lib/types";
 import { ProjectDetail } from "./ProjectDetail";
 
 type ProjectDetailSheetProps = {
@@ -9,7 +9,6 @@ type ProjectDetailSheetProps = {
   project: Project | null;
   categories: Category[];
   launchers: AppLauncher[];
-  commandTemplates: CommandTemplate[];
   onClose: () => void;
 };
 
@@ -18,7 +17,6 @@ export function ProjectDetailSheet({
   project,
   categories,
   launchers,
-  commandTemplates,
   onClose,
 }: ProjectDetailSheetProps) {
   const { render, state } = useMountTransition(open, 360);
@@ -49,8 +47,8 @@ export function ProjectDetailSheet({
             project={latest}
             categories={categories}
             launchers={launchers}
-            commandTemplates={commandTemplates}
             embedded
+            onCommandRun={onClose}
           />
         </div>
       </aside>

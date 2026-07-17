@@ -2,18 +2,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import type { CommandTemplateDraft } from "../lib/types";
 
-export const commandTemplatesQueryKey = ["command-templates"];
+export const commandTemplatesQueryKey = (projectId: string | null) => [
+  "command-templates",
+  projectId ?? "global",
+];
 
-export const useCommandTemplates = () =>
+export const useCommandTemplates = (projectId: string | null = null) =>
   useQuery({
-    queryKey: commandTemplatesQueryKey,
-    queryFn: api.listCommandTemplates,
+    queryKey: commandTemplatesQueryKey(projectId),
+    queryFn: () => api.listCommandTemplates(projectId),
   });
 
 export const useCommandTemplateActions = () => {
   const queryClient = useQueryClient();
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: commandTemplatesQueryKey });
+    queryClient.invalidateQueries({ queryKey: ["command-templates"] });
 
   return {
     createCommandTemplate: useMutation({
@@ -27,6 +30,16 @@ export const useCommandTemplateActions = () => {
     }),
     deleteCommandTemplate: useMutation({
       mutationFn: (id: string) => api.deleteCommandTemplate(id),
+      onSuccess: invalidate,
+    }),
+    reorderProjectCommands: useMutation({
+      mutationFn: ({
+        projectId,
+        templateIds,
+      }: {
+        projectId: string;
+        templateIds: string[];
+      }) => api.reorderProjectCommands(projectId, templateIds),
       onSuccess: invalidate,
     }),
   };

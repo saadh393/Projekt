@@ -12,7 +12,6 @@ pub struct Project {
     pub color: Option<String>,
     pub sort_order: i64,
     pub hidden: bool,
-    pub pinned_commands: Vec<String>,
     pub last_opened_at: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
@@ -29,7 +28,6 @@ pub struct ProjectInput {
     pub color: Option<String>,
     pub sort_order: Option<i64>,
     pub hidden: Option<bool>,
-    pub pinned_commands: Option<Vec<String>>,
     pub tags: Option<Vec<String>>,
 }
 
@@ -51,9 +49,6 @@ pub enum ProjectSort {
 }
 
 pub fn project_from_row(row: &Row<'_>) -> rusqlite::Result<Project> {
-    let pinned_commands_json: String = row.get("pinned_commands")?;
-    let pinned_commands = serde_json::from_str(&pinned_commands_json).unwrap_or_default();
-
     Ok(Project {
         id: row.get("id")?,
         name: row.get("name")?,
@@ -63,7 +58,6 @@ pub fn project_from_row(row: &Row<'_>) -> rusqlite::Result<Project> {
         color: row.get("color")?,
         sort_order: row.get("sort_order")?,
         hidden: row.get::<_, i64>("hidden")? != 0,
-        pinned_commands,
         last_opened_at: row.get("last_opened_at")?,
         created_at: row.get("created_at")?,
         updated_at: row.get("updated_at")?,

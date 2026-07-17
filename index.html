@@ -3,11 +3,865 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f7f7f5" />
-    <title>Projekt</title>
+    <meta name="theme-color" content="#f4f6f8" />
+    <meta
+      name="description"
+      content="Projekt is a focused desktop app for organizing local development projects, launchers, commands, and workspaces in one place."
+    />
+    <meta property="og:title" content="Projekt" />
+    <meta
+      property="og:description"
+      content="A native desktop command center for local codebases, launchers, and pinned project commands."
+    />
+    <meta property="og:image" content="screenshorts/home-screen.png" />
+    <title>Projekt - Local project command center</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f6f8;
+        --surface: #ffffff;
+        --surface-soft: #e9edf2;
+        --surface-tint: #d9e7f8;
+        --text: #15171a;
+        --muted: #5e6672;
+        --faint: #8b94a1;
+        --border: rgba(21, 23, 26, 0.12);
+        --accent: #0a84ff;
+        --accent-strong: #0663c4;
+        --accent-soft: rgba(10, 132, 255, 0.14);
+        --shadow: 0 28px 80px rgba(26, 38, 58, 0.16);
+        --radius: 22px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #101216;
+          --surface: #181b21;
+          --surface-soft: #20242c;
+          --surface-tint: #13253d;
+          --text: #f0f4f8;
+          --muted: #a6b0bd;
+          --faint: #7d8897;
+          --border: rgba(240, 244, 248, 0.13);
+          --accent: #51a8ff;
+          --accent-strong: #8bc4ff;
+          --accent-soft: rgba(81, 168, 255, 0.16);
+          --shadow: 0 28px 90px rgba(0, 0, 0, 0.36);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          radial-gradient(circle at 82% 8%, var(--accent-soft), transparent 30rem),
+          linear-gradient(180deg, var(--bg), var(--surface-soft));
+        color: var(--text);
+        font-family:
+          ui-sans-serif,
+          -apple-system,
+          BlinkMacSystemFont,
+          "SF Pro Display",
+          "SF Pro Text",
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.5;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .page {
+        overflow: hidden;
+      }
+
+      .container {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg) 82%, transparent);
+        backdrop-filter: blur(22px) saturate(160%);
+        -webkit-backdrop-filter: blur(22px) saturate(160%);
+      }
+
+      .nav-inner {
+        display: flex;
+        min-height: 68px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 760;
+        letter-spacing: -0.03em;
+      }
+
+      .brand img {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        color: var(--muted);
+        font-size: 0.94rem;
+        font-weight: 620;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        padding: 0 20px;
+        font-weight: 720;
+        transition:
+          transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+          background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+      }
+
+      .button:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+        box-shadow: 0 12px 32px color-mix(in srgb, var(--accent) 32%, transparent);
+      }
+
+      .button.secondary {
+        background: color-mix(in srgb, var(--surface) 72%, transparent);
+        color: var(--text);
+      }
+
+      .hero {
+        min-height: calc(100dvh - 68px);
+        padding: 56px 0 72px;
+        display: grid;
+        align-items: center;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+        gap: 54px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 760;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 11ch;
+        font-size: clamp(3.4rem, 7vw, 6.7rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+      }
+
+      .hero-copy {
+        max-width: 540px;
+        margin-top: 24px;
+        color: var(--muted);
+        font-size: clamp(1.08rem, 2vw, 1.28rem);
+        line-height: 1.55;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .hero-media {
+        position: relative;
+        min-height: 570px;
+      }
+
+      .ambient {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: calc(var(--radius) + 16px);
+        box-shadow: var(--shadow);
+      }
+
+      .ambient img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.58;
+        filter: saturate(0.85) contrast(1.02);
+      }
+
+      .ambient::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(135deg, color-mix(in srgb, var(--bg) 8%, transparent), color-mix(in srgb, var(--surface) 78%, transparent)),
+          radial-gradient(circle at 22% 16%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 26rem);
+      }
+
+      .product-frame {
+        position: absolute;
+        inset: 56px -38px auto 32px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+        border-radius: calc(var(--radius) + 10px);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        transform: rotate(-2.5deg);
+      }
+
+      .product-frame img {
+        width: 100%;
+        aspect-ratio: 1960 / 1524;
+        object-fit: cover;
+      }
+
+      .detail-frame {
+        position: absolute;
+        right: 22px;
+        bottom: 12px;
+        width: min(78%, 540px);
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+        border-radius: calc(var(--radius) + 4px);
+        background: var(--surface);
+        box-shadow: 0 22px 58px rgba(26, 38, 58, 0.22);
+      }
+
+      .detail-frame img {
+        aspect-ratio: 1962 / 1520;
+        object-fit: cover;
+        object-position: 76% 50%;
+      }
+
+      .logo-band {
+        border-block: 1px solid var(--border);
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+      }
+
+      .logo-row {
+        display: grid;
+        grid-template-columns: 1fr repeat(5, minmax(52px, 96px));
+        gap: 24px;
+        align-items: center;
+        padding: 26px 0;
+      }
+
+      .logo-row p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        font-weight: 650;
+      }
+
+      .tech-logo {
+        display: grid;
+        min-height: 44px;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .tech-logo img {
+        width: 24px;
+        height: 24px;
+        opacity: 0.78;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .tech-logo img {
+          filter: invert(1);
+        }
+      }
+
+      section {
+        padding: 96px 0;
+      }
+
+      .section-head {
+        max-width: 740px;
+        margin-bottom: 38px;
+      }
+
+      h2 {
+        max-width: 12ch;
+        font-size: clamp(2.4rem, 5vw, 5.2rem);
+        line-height: 0.98;
+        letter-spacing: -0.065em;
+      }
+
+      .section-head p {
+        max-width: 58ch;
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 1.08rem;
+      }
+
+      .problem-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .statement {
+        display: grid;
+        align-content: end;
+        min-height: 520px;
+        padding: 38px;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(160deg, var(--surface), var(--surface-tint)),
+          var(--surface);
+        box-shadow: inset 0 0 0 1px var(--border);
+      }
+
+      .statement h2 {
+        max-width: 10ch;
+      }
+
+      .statement p {
+        max-width: 48ch;
+        margin-top: 22px;
+        color: var(--muted);
+      }
+
+      .flow {
+        display: grid;
+        gap: 14px;
+      }
+
+      .flow-item {
+        display: grid;
+        align-content: space-between;
+        min-height: 154px;
+        padding: 26px;
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: inset 0 0 0 1px var(--border);
+      }
+
+      .flow-item strong {
+        font-size: 1.28rem;
+        letter-spacing: -0.03em;
+      }
+
+      .flow-item span {
+        color: var(--muted);
+      }
+
+      .showcase {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .showcase-image,
+      .release-card,
+      .feature-card {
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: inset 0 0 0 1px var(--border);
+      }
+
+      .showcase-image {
+        overflow: hidden;
+        padding: 12px;
+      }
+
+      .showcase-image img {
+        width: 100%;
+        height: 100%;
+        min-height: 560px;
+        border-radius: calc(var(--radius) - 8px);
+        object-fit: cover;
+        object-position: left top;
+      }
+
+      .feature-stack {
+        display: grid;
+        gap: 20px;
+      }
+
+      .feature-card {
+        display: grid;
+        min-height: 178px;
+        align-content: space-between;
+        padding: 26px;
+      }
+
+      .feature-card:nth-child(2) {
+        background:
+          radial-gradient(circle at 86% 16%, var(--accent-soft), transparent 15rem),
+          var(--surface);
+      }
+
+      .feature-card h3,
+      .release-card h3 {
+        font-size: 1.24rem;
+        letter-spacing: -0.035em;
+      }
+
+      .feature-card p,
+      .release-card p {
+        color: var(--muted);
+      }
+
+      .release-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .release-card {
+        display: grid;
+        min-height: 250px;
+        align-content: space-between;
+        padding: 28px;
+      }
+
+      .release-card span {
+        color: var(--faint);
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .release-card .button {
+        width: fit-content;
+        margin-top: 28px;
+      }
+
+      .final {
+        padding: 96px 0 72px;
+      }
+
+      .final-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
+        gap: 34px;
+        align-items: center;
+        padding: 34px;
+        border-radius: calc(var(--radius) + 14px);
+        background:
+          radial-gradient(circle at 16% 20%, var(--accent-soft), transparent 22rem),
+          var(--surface);
+        box-shadow: inset 0 0 0 1px var(--border), var(--shadow);
+      }
+
+      .final-panel h2 {
+        max-width: 9ch;
+      }
+
+      .final-panel p {
+        max-width: 54ch;
+        margin-top: 18px;
+        color: var(--muted);
+      }
+
+      .final-panel img {
+        overflow: hidden;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        object-fit: cover;
+      }
+
+      .footer {
+        padding: 34px 0 44px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .footer a {
+        font-weight: 700;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .hero-content,
+        .product-frame,
+        .detail-frame,
+        .section-head,
+        .flow-item,
+        .feature-card,
+        .release-card,
+        .final-panel {
+          animation: rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .product-frame {
+          animation-delay: 120ms;
+        }
+
+        .detail-frame {
+          animation-delay: 220ms;
+        }
+
+        @supports (animation-timeline: view()) {
+          .section-head,
+          .flow-item,
+          .feature-card,
+          .release-card,
+          .final-panel {
+            animation-timeline: view();
+            animation-range: entry 8% cover 32%;
+          }
+        }
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(26px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .container {
+          width: min(100% - 28px, 760px);
+        }
+
+        .nav-links a:not(.button) {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+          padding: 42px 0 54px;
+        }
+
+        .hero-grid,
+        .problem-grid,
+        .showcase,
+        .final-panel {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          max-width: 10ch;
+          font-size: clamp(3.1rem, 16vw, 5rem);
+        }
+
+        h2 {
+          max-width: 11ch;
+        }
+
+        .hero-media {
+          min-height: 500px;
+        }
+
+        .product-frame {
+          inset: 38px 0 auto 0;
+        }
+
+        .detail-frame {
+          right: 0;
+          width: 82%;
+        }
+
+        .logo-row,
+        .release-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .logo-row {
+          justify-items: start;
+        }
+
+        .tech-logo {
+          width: 96px;
+        }
+
+        section,
+        .final {
+          padding: 68px 0;
+        }
+
+        .statement {
+          min-height: 420px;
+        }
+
+        .showcase-image img {
+          min-height: auto;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .nav-inner {
+          min-height: 64px;
+        }
+
+        .brand span {
+          display: none;
+        }
+
+        .button {
+          min-height: 42px;
+          padding: 0 16px;
+        }
+
+        .hero-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .hero-media {
+          min-height: 390px;
+        }
+
+        .ambient {
+          border-radius: var(--radius);
+        }
+
+        .product-frame {
+          inset: 28px 0 auto 0;
+          transform: rotate(-1.5deg);
+        }
+
+        .detail-frame {
+          width: 88%;
+          bottom: 0;
+        }
+
+        .statement,
+        .final-panel {
+          padding: 24px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="page">
+      <nav class="nav">
+        <div class="container nav-inner">
+          <a class="brand" href="#top" aria-label="Projekt home">
+            <img src="/logo.png" alt="" />
+            <span>Projekt</span>
+          </a>
+          <div class="nav-links" aria-label="Primary navigation">
+            <a href="#workspace">Workspace</a>
+            <a href="#release">Release</a>
+            <a class="button primary" href="https://github.com/saadh393/Projekt/releases/latest">Download</a>
+          </div>
+        </div>
+      </nav>
+
+      <main id="top">
+        <section class="hero">
+          <div class="container hero-grid">
+            <div class="hero-content">
+              <p class="eyebrow">Local-first desktop app</p>
+              <h1>Start work faster.</h1>
+              <p class="hero-copy">Projekt keeps local projects, commands, and launchers in one focused native workspace.</p>
+              <div class="hero-actions">
+                <a class="button primary" href="https://github.com/saadh393/Projekt/releases/latest">Download</a>
+                <a class="button secondary" href="https://github.com/saadh393/Projekt">View GitHub</a>
+              </div>
+            </div>
+            <div class="hero-media" aria-label="Projekt desktop app preview">
+              <div class="ambient">
+                <img src="screenshorts/developer-workspace.png" alt="" />
+              </div>
+              <div class="product-frame">
+                <img src="screenshorts/home-screen.png" alt="Projekt project list with categories, search, sorting, and project actions" />
+              </div>
+              <div class="detail-frame">
+                <img src="screenshorts/project-details.png" alt="Projekt project detail panel with launch actions and pinned commands" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="logo-band">
+          <div class="container logo-row" aria-label="Technology stack">
+            <p>Built as a small native app with a local database.</p>
+            <span class="tech-logo"><img src="https://cdn.simpleicons.org/tauri/15171A" alt="Tauri" /></span>
+            <span class="tech-logo"><img src="https://cdn.simpleicons.org/react/15171A" alt="React" /></span>
+            <span class="tech-logo"><img src="https://cdn.simpleicons.org/typescript/15171A" alt="TypeScript" /></span>
+            <span class="tech-logo"><img src="https://cdn.simpleicons.org/rust/15171A" alt="Rust" /></span>
+            <span class="tech-logo"><img src="https://cdn.simpleicons.org/sqlite/15171A" alt="SQLite" /></span>
+          </div>
+        </div>
+
+        <section>
+          <div class="container problem-grid">
+            <div class="statement">
+              <h2>Stop hunting for folders.</h2>
+              <p>Finder, recent editors, and generic launchers do not know which folder is a project or what you run there.</p>
+            </div>
+            <div class="flow" aria-label="Projekt workflow">
+              <div class="flow-item">
+                <strong>Add a folder</strong>
+                <span>Save the project name, path, category, tags, and color once.</span>
+              </div>
+              <div class="flow-item">
+                <strong>Choose a launcher</strong>
+                <span>Open Finder, VS Code, Terminal, or any custom macOS app.</span>
+              </div>
+              <div class="flow-item">
+                <strong>Run the command</strong>
+                <span>Pin reusable commands and start them from the project detail panel.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="workspace">
+          <div class="container">
+            <div class="section-head">
+              <h2>A workspace shaped around code.</h2>
+              <p>Projekt organizes projects by client, product, or personal area while keeping search and one-click actions in reach.</p>
+            </div>
+            <div class="showcase">
+              <div class="showcase-image">
+                <img src="screenshorts/home-screen.png" alt="Projekt home screen with project categories and search controls" />
+              </div>
+              <div class="feature-stack">
+                <article class="feature-card">
+                  <h3>Project registry</h3>
+                  <p>Keep descriptions, filesystem paths, categories, tags, colors, hidden states, and manual ordering together.</p>
+                </article>
+                <article class="feature-card">
+                  <h3>Command templates</h3>
+                  <p>Pin common shell commands per project and launch them without rebuilding the command from memory.</p>
+                </article>
+                <article class="feature-card">
+                  <h3>Local storage</h3>
+                  <p>SQLite keeps project data on the machine. There is no account, sync layer, or cloud dependency.</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="release">
+          <div class="container">
+            <div class="section-head">
+              <h2>Packaged for desktop releases.</h2>
+              <p>GitHub Actions builds desktop artifacts for Apple Silicon, Intel Mac, and Windows from release tags.</p>
+            </div>
+            <div class="release-grid">
+              <article class="release-card">
+                <span>macOS</span>
+                <div>
+                  <h3>Apple Silicon</h3>
+                  <p>DMG artifact built from the aarch64 Apple target with checksum output.</p>
+                  <a class="button secondary" href="https://github.com/saadh393/Projekt/releases/latest">Download</a>
+                </div>
+              </article>
+              <article class="release-card">
+                <span>macOS</span>
+                <div>
+                  <h3>Intel Mac</h3>
+                  <p>DMG artifact built from the x64 Apple target for older Mac hardware.</p>
+                  <a class="button secondary" href="https://github.com/saadh393/Projekt/releases/latest">Download</a>
+                </div>
+              </article>
+              <article class="release-card">
+                <span>Windows</span>
+                <div>
+                  <h3>x64 installer</h3>
+                  <p>MSI and NSIS packages are collected from the Windows release build.</p>
+                  <a class="button secondary" href="https://github.com/saadh393/Projekt/releases/latest">Download</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="final">
+          <div class="container final-panel">
+            <div>
+              <h2>One place to begin work.</h2>
+              <p>Open the folder, editor, terminal, and project command from the same native surface.</p>
+              <div class="hero-actions">
+                <a class="button primary" href="https://github.com/saadh393/Projekt/releases/latest">Download</a>
+                <a class="button secondary" href="https://github.com/saadh393/Projekt">View GitHub</a>
+              </div>
+            </div>
+            <img src="screenshorts/project-details.png" alt="Projekt project detail view with Finder, Code, Terminal, and pinned commands" />
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-inner">
+          <span>Projekt</span>
+          <a href="https://github.com/saadh393/Projekt">GitHub</a>
+        </div>
+      </footer>
+    </div>
   </body>
 </html>

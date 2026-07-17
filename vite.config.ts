@@ -5,6 +5,11 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   publicDir: "src/public",
+  build: {
+    rollupOptions: {
+      input: ["index.html", "app.html"],
+    },
+  },
   clearScreen: false,
   server: {
     port: 1420,

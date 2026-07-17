@@ -109,8 +109,6 @@ pub fn create_project(db: State<'_, Database>, input: ProjectInput) -> Result<Pr
     db.with_transaction(|transaction| {
         let id = new_id();
         let now = now_timestamp();
-        let pinned_commands = serde_json::to_string(&input.pinned_commands.unwrap_or_default())?;
-
         transaction.execute(
             "INSERT INTO projects (
                id, name, description, path, category_id, color, sort_order, hidden,
@@ -129,7 +127,7 @@ pub fn create_project(db: State<'_, Database>, input: ProjectInput) -> Result<Pr
                 ":color": trimmed_optional(input.color.as_deref()),
                 ":sort_order": input.sort_order.unwrap_or_default(),
                 ":hidden": bool_to_i64(input.hidden.unwrap_or(false)),
-                ":pinned_commands": pinned_commands,
+                ":pinned_commands": "[]",
                 ":created_at": now,
                 ":updated_at": now,
             },
@@ -157,8 +155,6 @@ pub fn update_project(
 ) -> Result<Project, String> {
     db.with_transaction(|transaction| {
         let now = now_timestamp();
-        let pinned_commands = serde_json::to_string(&input.pinned_commands.unwrap_or_default())?;
-
         transaction.execute(
             "UPDATE projects
              SET name = :name,
@@ -168,7 +164,6 @@ pub fn update_project(
                  color = :color,
                  sort_order = :sort_order,
                  hidden = :hidden,
-                 pinned_commands = :pinned_commands,
                  updated_at = :updated_at
              WHERE id = :id",
             named_params! {
@@ -180,7 +175,6 @@ pub fn update_project(
                 ":color": trimmed_optional(input.color.as_deref()),
                 ":sort_order": input.sort_order.unwrap_or_default(),
                 ":hidden": bool_to_i64(input.hidden.unwrap_or(false)),
-                ":pinned_commands": pinned_commands,
                 ":updated_at": now,
             },
         )?;
@@ -216,39 +210,6 @@ pub fn set_project_hidden(
             named_params! {
                 ":id": id,
                 ":hidden": bool_to_i64(hidden),
-                ":updated_at": now_timestamp(),
-            },
-        )?;
-
-        let mut project = connection
-            .query_row(
-                "SELECT * FROM projects WHERE id = :id",
-                named_params! { ":id": id },
-                project_from_row,
-            )
-            .optional()?
-            .ok_or_else(|| anyhow::anyhow!("project not found"))?;
-        project.tags = load_project_tags(connection, &project.id)?;
-
-        Ok(project)
-    })
-    .map_err(command_error)
-}
-
-#[tauri::command]
-pub fn set_project_pinned_commands(
-    db: State<'_, Database>,
-    id: String,
-    pinned_commands: Vec<String>,
-) -> Result<Project, String> {
-    db.with_connection(|connection| {
-        connection.execute(
-            "UPDATE projects
-             SET pinned_commands = :pinned_commands, updated_at = :updated_at
-             WHERE id = :id",
-            named_params! {
-                ":id": id,
-                ":pinned_commands": serde_json::to_string(&pinned_commands)?,
                 ":updated_at": now_timestamp(),
             },
         )?;

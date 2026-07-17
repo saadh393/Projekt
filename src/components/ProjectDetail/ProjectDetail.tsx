@@ -4,24 +4,24 @@ import { findCategoryName } from "../../lib/categoryUtils";
 import { useProjectActions } from "../../hooks/useProjects";
 import { getDeleteProjectMessage } from "../../lib/projectDelete";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
-import type { AppLauncher, Category, CommandTemplate, Project } from "../../lib/types";
+import type { AppLauncher, Category, Project } from "../../lib/types";
 import { ActionBar } from "./ActionBar";
-import { CommandRunner } from "./CommandRunner";
+import { CommandManager } from "../Commands/CommandManager";
 
 type ProjectDetailProps = {
   project: Project | null;
   categories: Category[];
   launchers: AppLauncher[];
-  commandTemplates: CommandTemplate[];
   embedded?: boolean;
+  onCommandRun?: () => void;
 };
 
 export function ProjectDetail({
   project,
   categories,
   launchers,
-  commandTemplates,
   embedded = false,
+  onCommandRun,
 }: ProjectDetailProps) {
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
   const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
@@ -171,13 +171,18 @@ export function ProjectDetail({
           </div>
 
           <div className="mt-5">
-            <h3
-              className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              Pinned Commands
-            </h3>
-            <CommandRunner project={project} templates={commandTemplates} />
+            <CommandManager
+              projectId={project.id}
+              title={
+                <h3
+                  className="text-[11px] font-semibold uppercase tracking-wider"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  Commands
+                </h3>
+              }
+              onCommandRun={onCommandRun}
+            />
           </div>
         </div>
       )}

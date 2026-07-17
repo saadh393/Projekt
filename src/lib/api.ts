@@ -5,6 +5,7 @@ import type {
   CategoryDraft,
   CommandTemplate,
   CommandTemplateDraft,
+  CommandRunResult,
   Divider,
   DividerDraft,
   GeneralSettings,
@@ -12,6 +13,8 @@ import type {
   Project,
   ProjectDraft,
   ReorderItem,
+  ShellPreference,
+  SortMode,
   TerminalPreference,
 } from "./types";
 
@@ -34,7 +37,7 @@ export const api = {
   openVsCode: (projectId: string) => call<void>("open_project_in_vscode", { projectId }),
   openTerminal: (projectId: string) => call<void>("open_project_in_terminal", { projectId }),
   runCommandTemplate: (projectId: string, templateId: string) =>
-    call<void>("run_project_command_template", { projectId, templateId }),
+    call<CommandRunResult>("run_project_command_template", { projectId, templateId }),
   openWithLauncher: (projectId: string, launcherId: string) =>
     call<void>("launch_project_app", { projectId, launcherId }),
 
@@ -62,20 +65,49 @@ export const api = {
   reorderListItems: (items: ReorderItem[]) =>
     call<void>("reorder_list_items", { items }),
 
-  listCommandTemplates: () => call<CommandTemplate[]>("list_command_templates"),
+  listCommandTemplates: (projectId: string | null = null) =>
+    call<CommandTemplate[]>("list_command_templates", { projectId }),
   createCommandTemplate: (template: CommandTemplateDraft) =>
     call<CommandTemplate>("create_command_template", { input: template }),
   updateCommandTemplate: (id: string, template: Partial<CommandTemplateDraft>) =>
     call<CommandTemplate>("update_command_template", { id, input: template }),
   deleteCommandTemplate: (id: string) => call<void>("delete_command_template", { id }),
+  reorderProjectCommands: (projectId: string, templateIds: string[]) =>
+    call<void>("reorder_project_commands", { projectId, templateIds }),
 
-  getSettings: async (): Promise<GeneralSettings> => ({
-    preferredTerminal: await call<TerminalPreference>("get_preferred_terminal"),
-  }),
+  getProjectSortMode: () => call<SortMode>("get_project_sort_mode"),
+  setProjectSortMode: (mode: SortMode) =>
+    call<SortMode>("set_project_sort_mode", { mode }),
+  getShowHiddenProjects: () => call<boolean>("get_show_hidden_projects"),
+  setShowHiddenProjects: (show: boolean) =>
+    call<boolean>("set_show_hidden_projects", { show }),
+
+  writeTerminalSession: (sessionId: string, data: number[]) =>
+    call<void>("write_terminal_session", { sessionId, data }),
+  resizeTerminalSession: (sessionId: string, rows: number, cols: number) =>
+    call<void>("resize_terminal_session", { sessionId, rows, cols }),
+  killTerminalSession: (sessionId: string) =>
+    call<void>("kill_terminal_session", { sessionId }),
+
+  getSettings: async (): Promise<GeneralSettings> => {
+    const [preferredTerminal, preferredShell, availableShells] = await Promise.all([
+      call<TerminalPreference>("get_preferred_terminal"),
+      call<ShellPreference>("get_preferred_shell"),
+      call<ShellPreference[]>("list_available_shells"),
+    ]);
+
+    return { preferredTerminal, preferredShell, availableShells };
+  },
   updateSettings: async (settings: Partial<GeneralSettings>): Promise<GeneralSettings> => {
     if (settings.preferredTerminal) {
       await call<TerminalPreference>("set_preferred_terminal", {
         terminal: settings.preferredTerminal,
+      });
+    }
+
+    if (settings.preferredShell) {
+      await call<ShellPreference>("set_preferred_shell", {
+        shell: settings.preferredShell,
       });
     }
 

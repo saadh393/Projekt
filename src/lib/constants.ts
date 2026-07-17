@@ -1,4 +1,4 @@
-import type { ProjectDraft, SortMode, TerminalPreference } from "./types";
+import type { ProjectDraft, ShellPreference, SortMode, TerminalPreference } from "./types";
 
 export const allProjectsCategoryId = "all";
 
@@ -37,6 +37,13 @@ export const terminalLabels: Record<TerminalPreference, string> = {
   warp: "Warp",
 };
 
+export const shellLabels: Record<ShellPreference, string> = {
+  bash: "Bash",
+  zsh: "Zsh",
+  powershell: "PowerShell",
+  cmd: "Command Prompt",
+};
+
 export const defaultCategoryIcon = "briefcase";
 
 export const emptyProjectDraft: ProjectDraft = {
@@ -46,5 +53,4 @@ export const emptyProjectDraft: ProjectDraft = {
   categoryId: null,
   color: "#2563eb",
   tags: [],
-  pinnedCommands: [],
 };

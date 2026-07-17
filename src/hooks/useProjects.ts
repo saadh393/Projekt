@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { useTerminalStore } from "../store/useTerminalStore";
 import type { ProjectDraft } from "../lib/types";
 
 export const projectsQueryKey = ["projects"];
@@ -31,6 +32,7 @@ export const useUpdateProject = () => {
 
 export const useProjectActions = () => {
   const queryClient = useQueryClient();
+  const addTerminalSession = useTerminalStore((state) => state.addSession);
   const invalidate = () => queryClient.invalidateQueries({ queryKey: projectsQueryKey });
 
   return {
@@ -62,7 +64,12 @@ export const useProjectActions = () => {
     runCommandTemplate: useMutation({
       mutationFn: ({ projectId, templateId }: { projectId: string; templateId: string }) =>
         api.runCommandTemplate(projectId, templateId),
-      onSuccess: invalidate,
+      onSuccess: (result) => {
+        if (result.kind === "embedded") {
+          addTerminalSession(result.session);
+        }
+        void invalidate();
+      },
     }),
     openWithLauncher: useMutation({
       mutationFn: ({ projectId, launcherId }: { projectId: string; launcherId: string }) =>
