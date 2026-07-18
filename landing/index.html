@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projekt — Your projects, one command away</title>
+  <meta name="description" content="A local-first hub for every project on your Mac. Add a folder, configure commands, and launch Finder, VS Code, or Terminal without leaving the app.">
+  <meta property="og:title" content="Projekt — Your projects, one command away">
+  <meta property="og:description" content="A local-first hub for every project on your Mac. Open source.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="../src/public/logo.png">
+  <link rel="apple-touch-icon" href="../src/public/logo.png">
+  <script>
+    (function () {
+      var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (!mq.matches) document.documentElement.classList.add('animate');
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-tint: #f5f5f7;
+      --text: #1d1d1f;
+      --text-2: #6e6e73;
+      --text-3: #86868b;
+      --accent: #0071e3;
+      --accent-hover: #0077ed;
+      --border: #d2d2d7;
+      --border-soft: #e8e8ed;
+      --radius-card: 18px;
+      --radius-pill: 980px;
+      --maxw: 1080px;
+      --mono: ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    body {
+      font-family: var(--sans);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+      font-size: 17px;
+      letter-spacing: -0.003em;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    img { display: block; max-width: 100%; }
+
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+    .eyebrow {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    h1, h2, h3 { letter-spacing: -0.02em; text-wrap: balance; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: var(--radius-pill);
+      font-size: 17px;
+      font-weight: 500;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .btn-secondary:hover { background: rgba(0,113,227,0.06); }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      transition: background 0.3s, backdrop-filter 0.3s, border-color 0.3s;
+      border-bottom: 1px solid transparent;
+    }
+    nav.is-scrolled {
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom-color: var(--border-soft);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      max-width: var(--maxw);
+      margin: 0 auto;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; }
+    .nav-brand img { width: 28px; height: 28px; border-radius: 6px; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { font-size: 15px; color: var(--text-2); transition: color 0.2s; font-weight: 400; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      padding: 8px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 500;
+      background: var(--text);
+      color: #fff !important;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; color: #fff; }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    .hero {
+      padding: 140px 0 80px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-tint);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 24px;
+    }
+    .hero-badge span.dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #34c759;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 60px);
+      font-weight: 700;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+    .hero p.lead {
+      font-size: 20px;
+      color: var(--text-2);
+      line-height: 1.5;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-img-wrap { position: relative; }
+    .hero-img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.13), 0 0 0 1px var(--border-soft);
+    }
+
+    @media (max-width: 880px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+      .hero { padding: 120px 0 60px; }
+    }
+
+    .section { padding: 80px 0; }
+    .section-head { text-align: center; margin-bottom: 56px; }
+    .section-head h2 {
+      font-size: clamp(32px, 4.5vw, 44px);
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .section-head p {
+      font-size: 19px;
+      color: var(--text-2);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .bento-cell {
+      background: var(--bg);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-card);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .bento-cell:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 36px rgba(0,0,0,0.05);
+    }
+    .bento-cell--lg {
+      grid-column: span 2;
+      grid-row: span 2;
+      background: var(--bg-tint);
+      border-color: transparent;
+      padding: 36px;
+    }
+    .bento-cell--wide {
+      grid-column: span 2;
+    }
+    .bento-cell--tint {
+      background: var(--bg-tint);
+      border-color: transparent;
+    }
+    .bento-icon {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: rgba(0,113,227,0.08);
+      margin-bottom: 16px;
+    }
+    .bento-icon svg { width: 22px; height: 22px; }
+    .bento-cell h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+    .bento-cell--lg h3 { font-size: 26px; }
+    .bento-cell p {
+      font-size: 15px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+    .bento-cell--lg p { font-size: 17px; }
+    .launch-icons {
+      display: flex;
+      gap: 24px;
+      margin-top: auto;
+      padding-top: 28px;
+      align-items: center;
+    }
+    .launch-icons .launch-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .launch-icons .launch-item img { width: 36px; height: 36px; }
+    .launch-icons .launch-item span { font-size: 12px; color: var(--text-3); font-weight: 500; }
+
+    .terminal-mini {
+      margin-top: auto;
+      padding-top: 20px;
+      background: #1d1d1f;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #e8e8ed;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terminal-mini .prompt { color: #34c759; }
+
+    .sort-list { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .sort-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--text-3);
+    }
+    .sort-row .check { width: 16px; height: 16px; color: var(--accent); }
+
+    @media (max-width: 880px) {
+      .bento { grid-template-columns: 1fr; }
+      .bento-cell--lg, .bento-cell--wide { grid-column: span 1; grid-row: span 1; }
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      counter-reset: step;
+    }
+    .step {
+      text-align: center;
+      position: relative;
+    }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--bg-tint);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 0 auto 24px;
+      counter-increment: step;
+    }
+    .step-num::before { content: counter(step); }
+    .step h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .step p { font-size: 16px; color: var(--text-2); }
+
+    @media (max-width: 768px) {
+      .steps { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    .local-first {
+      background: var(--bg-tint);
+      border-radius: 24px;
+      padding: 64px 48px;
+      text-align: center;
+    }
+    .local-first .lock-badge {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .local-first h2 { font-size: clamp(28px, 4vw, 38px); font-weight: 600; margin-bottom: 14px; }
+    .local-first p { font-size: 19px; color: var(--text-2); max-width: 560px; margin: 0 auto; }
+
+    .tech-strip { text-align: center; }
+    .tech-strip p.label { font-size: 14px; color: var(--text-3); margin-bottom: 28px; font-weight: 500; }
+    .tech-icons { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; }
+    .tech-icons .tech-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .tech-icons .tech-item img { width: 32px; height: 32px; opacity: 0.35; transition: opacity 0.3s; }
+    .tech-icons .tech-item:hover img { opacity: 0.7; }
+    .tech-icons .tech-item span { font-size: 13px; color: var(--text-3); font-weight: 500; }
+
+    .download-cta {
+      text-align: center;
+      padding: 100px 0;
+    }
+    .download-cta h2 {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .download-cta p {
+      font-size: 19px;
+      color: var(--text-2);
+      margin-bottom: 36px;
+    }
+    .download-cta .btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    footer {
+      border-top: 1px solid var(--border-soft);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    .footer-brand img { width: 24px; height: 24px; border-radius: 5px; }
+    .footer-meta { display: flex; gap: 24px; font-size: 14px; color: var(--text-3); }
+    .footer-meta a:hover { color: var(--text); }
+
+    .animate [data-hero] > *,
+    .animate [data-hero-img],
+    .animate [data-animate] {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .bento-cell { transition: none; }
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="../src/public/logo.png" alt="Projekt">
+        Projekt
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#download">Download</a>
+      </div>
+      <a href="https://github.com/saadh393/Projekt" class="nav-cta" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div data-hero>
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Open source · macOS &amp; Windows
+          </div>
+          <h1>Your projects.<br>One command away.</h1>
+          <p class="lead">
+            Projekt is a local-first hub for every project on your Mac.
+            Add a folder, configure your commands, and launch Finder,
+            VS Code, or Terminal without digging through menus.
+          </p>
+          <div class="hero-cta">
+            <a href="https://github.com/saadh393/Projekt/releases" class="btn btn-primary" target="_blank" rel="noopener">
+              Download for Mac
+            </a>
+            <a href="https://github.com/saadh393/Projekt" class="btn btn-secondary" target="_blank" rel="noopener">
+              Star on GitHub
+            </a>
+          </div>
+        </div>
+        <div class="hero-img-wrap" data-hero-img>
+          <img src="../screenshorts/home-screen.png" alt="Projekt home screen" class="hero-img">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head" data-animate>
+        <div class="eyebrow">Features</div>
+        <h2>Everything in one place</h2>
+        <p>Built for developers who juggle dozens of projects and want them organized, accessible, and ready to launch.</p>
+      </div>
+
+      <div class="bento">
+        <div class="bento-cell bento-cell--lg" data-animate>
+          <div class="bento-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M3 9h18"/><path d="M8 13h4"/>
+            </svg>
+          </div>
+          <h3>Every project, one home</h3>
+          <p>Drop in any folder. Projekt tracks it, organizes it, and keeps it one click away. No more digging through Finder or recalling where things live.</p>
+          <div class="launch-icons">
+            <div class="launch-item">
+              <img src="../src/public/finder.svg" alt="Finder">
+              <span>Finder</span>
+            </div>
+            <div class="launch-item">
+              <img src="../src/public/vscode.svg" alt="VS Code">
+              <span>VS Code</span>
+            </div>
+            <div class="launch-item">
+              <img src="../src/public/terminal.svg" alt="Terminal">
+              <span>Terminal</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-cell bento-cell--wide" data-animate>
+          <div class="bento-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </div>
+          <h3>Launch in one click</h3>
+          <p>Open Finder, VS Code, and Terminal for any project instantly. One click, three apps, zero friction.</p>
+        </div>
+
+        <div class="bento-cell bento-cell--tint" data-animate>
+          <div class="bento-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+          </div>
+          <h3>Custom commands</h3>
+          <p>Per-project shell commands, fully customizable.</p>
+          <div class="terminal-mini">
+            <span class="prompt">$</span> npm run dev
+          </div>
+        </div>
+
+        <div class="bento-cell" data-animate>
+          <div class="bento-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/>
+            </svg>
+          </div>
+          <h3>Your structure</h3>
+          <p>Sort, hide, and reorder projects and commands your way.</p>
+          <div class="sort-list">
+            <div class="sort-row">
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Sort by name, date, or custom
+            </div>
+            <div class="sort-row">
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Hide what you don't need
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how" style="padding-top:0;">
+    <div class="container">
+      <div class="section-head" data-animate>
+        <div class="eyebrow">How it works</div>
+        <h2>Three steps to launch</h2>
+        <p>From zero to organized in under a minute.</p>
+      </div>
+      <div class="steps">
+        <div class="step" data-animate>
+          <div class="step-num"></div>
+          <h3>Add a project</h3>
+          <p>Pick any folder on your Mac. Projekt handles the rest.</p>
+        </div>
+        <div class="step" data-animate>
+          <div class="step-num"></div>
+          <h3>Set up commands</h3>
+          <p>Configure launch actions and custom shell commands per project.</p>
+        </div>
+        <div class="step" data-animate>
+          <div class="step-num"></div>
+          <h3>Launch and go</h3>
+          <p>One click opens Finder, your editor, and terminal. Done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div class="local-first" data-animate>
+        <div class="lock-badge">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h2>Your data stays on your machine.</h2>
+        <p>Projekt stores everything in a local SQLite database. No account required, no cloud sync, no telemetry. Just your projects, right where they belong.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div class="tech-strip" data-animate>
+        <p class="label">Built with a stack you can trust</p>
+        <div class="tech-icons">
+          <div class="tech-item">
+            <img src="https://cdn.simpleicons.org/tauri" alt="Tauri">
+            <span>Tauri</span>
+          </div>
+          <div class="tech-item">
+            <img src="https://cdn.simpleicons.org/react" alt="React">
+            <span>React</span>
+          </div>
+          <div class="tech-item">
+            <img src="https://cdn.simpleicons.org/rust" alt="Rust">
+            <span>Rust</span>
+          </div>
+          <div class="tech-item">
+            <img src="https://cdn.simpleicons.org/sqlite" alt="SQLite">
+            <span>SQLite</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="download-cta" id="download">
+    <div class="container">
+      <div data-animate>
+        <h2>Ready to organize your projects?</h2>
+        <p>Projekt is free and open source. Download it now or build from source.</p>
+        <div class="btns">
+          <a href="https://github.com/saadh393/Projekt/releases" class="btn btn-primary" target="_blank" rel="noopener">
+            Download
+          </a>
+          <a href="https://github.com/saadh393/Projekt" class="btn btn-secondary" target="_blank" rel="noopener">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img src="../src/public/logo.png" alt="Projekt">
+          Projekt
+        </div>
+        <div class="footer-meta">
+          <span>Open source under MIT</span>
+          <a href="https://github.com/saadh393/Projekt" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/saadh393/Projekt/releases" target="_blank" rel="noopener">Releases</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    if (typeof gsap === 'undefined') {
+      document.documentElement.classList.remove('animate');
+    } else {
+      gsap.registerPlugin(ScrollTrigger);
+
+      var tl = gsap.timeline({ delay: 0.15, defaults: { duration: 0.8, ease: 'power3.out' } });
+      tl.to('[data-hero] > *', { opacity: 1, y: 0, stagger: 0.1 })
+        .to('[data-hero-img]', { opacity: 1, y: 0, duration: 1 }, '-=0.5');
+
+      ScrollTrigger.batch('[data-animate]', {
+        start: 'top 85%',
+        onEnter: function (batch) {
+          gsap.to(batch, { opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out' });
+        },
+        once: true
+      });
+
+      ScrollTrigger.create({
+        start: 'top -20',
+        end: 99999,
+        toggleClass: { className: 'is-scrolled', targets: '#nav' }
+      });
+    }
+  </script>
+
+</body>
+</html>
