@@ -32,6 +32,7 @@ pub struct CommandTemplate {
     pub command: String,
     pub project_id: Option<String>,
     pub execution_target: CommandExecutionTarget,
+    pub hidden: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -52,5 +53,6 @@ pub fn command_template_from_row(row: &Row<'_>) -> rusqlite::Result<CommandTempl
         execution_target: CommandExecutionTarget::from_str(
             &row.get::<_, String>("execution_target")?,
         ),
+        hidden: row.get::<_, i64>("hidden")? != 0,
     })
 }

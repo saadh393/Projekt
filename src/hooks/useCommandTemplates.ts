@@ -42,5 +42,17 @@ export const useCommandTemplateActions = () => {
       }) => api.reorderProjectCommands(projectId, templateIds),
       onSuccess: invalidate,
     }),
+    setProjectCommandHidden: useMutation({
+      mutationFn: ({
+        projectId,
+        templateId,
+        hidden,
+      }: {
+        projectId: string;
+        templateId: string;
+        hidden: boolean;
+      }) => api.setProjectCommandHidden(projectId, templateId, hidden),
+      onSuccess: invalidate,
+    }),
   };
 };

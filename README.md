@@ -40,6 +40,51 @@ Add a folder, organize it, then open it in Finder, VS Code, Terminal, or your ow
 
 ![Projekt project details](screenshorts/project-details.png)
 
+## Installation
+
+### Download
+
+Pre-built binaries are published on the [Releases page](https://github.com/saadh393/Projekt/releases).
+
+> Projekt is distributed independently — not through the Mac App Store and not
+> notarized by Apple — so macOS Gatekeeper will warn that the app is "from an
+> unidentified developer" on first launch. This is expected. Use one of the
+> options below to open it. The prompt appears only once.
+
+### Verify the download (optional)
+
+Every release ships a `.sha256` checksum file alongside each artifact. Verify
+before installing:
+
+```sh
+shasum -a 256 -c Projekt_<version>_aarch64.dmg.sha256
+```
+
+### Open on macOS
+
+After mounting the DMG and dragging **Projekt** into **Applications**, pick one
+of these on first launch:
+
+**Option A — Right-click → Open (fastest)**
+
+1. In Finder, right-click (or Control-click) **Projekt** in Applications.
+2. Choose **Open**.
+3. Confirm **Open** in the prompt. The warning won't reappear for this app.
+
+**Option B — System Settings (macOS Ventura and later)**
+
+1. Double-click Projekt. Dismiss the "cannot verify the developer" dialog.
+2. Open **System Settings → Privacy & Security**.
+3. Scroll down and click **Open Anyway** next to the Projekt notice, then confirm.
+
+**Option C — Terminal (one-shot)**
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Projekt.app
+```
+
+This strips the Gatekeeper quarantine flag from the bundle entirely.
+
 ## Features
 
 - Project registry for local folders with name, description, path, tags, category, color, and pinned commands.

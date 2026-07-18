@@ -40,3 +40,17 @@ cargo check
 . "$HOME/.cargo/env"
 npm run tauri:build
 ```
+
+## Build Desktop App (ad-hoc signed, for distribution)
+
+Ad-hoc signing avoids the "app is damaged" error on macOS without an Apple
+Developer certificate. Gatekeeper will still warn "unidentified developer" —
+see the README Installation section for the user-side bypass.
+
+```sh
+. "$HOME/.cargo/env"
+npm run tauri:build:signed
+```
+
+The release CI (`.github/workflows/release.yml`) ad-hoc signs macOS builds
+automatically and attaches SHA256 checksums to each GitHub Release.

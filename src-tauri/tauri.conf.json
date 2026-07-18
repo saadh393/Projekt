@@ -37,8 +37,8 @@
       "dmg": {
         "background": "./images/installer-background.png",
         "windowSize": {
-          "width": 698,
-          "height": 447
+          "width": 695,
+          "height": 545
         },
         "appPosition": {
           "x": 213,

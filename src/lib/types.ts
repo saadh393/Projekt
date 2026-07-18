@@ -45,6 +45,7 @@ export type CommandTemplate = {
   command: string;
   projectId: EntityId | null;
   executionTarget: CommandExecutionTarget;
+  hidden: boolean;
 };
 
 export type Divider = {

@@ -50,6 +50,7 @@ pub fn run() {
             commands::command_template::update_command_template,
             commands::command_template::delete_command_template,
             commands::command_template::reorder_project_commands,
+            commands::command_template::set_project_command_hidden,
             commands::preferences::get_project_sort_mode,
             commands::preferences::set_project_sort_mode,
             commands::preferences::get_show_hidden_projects,

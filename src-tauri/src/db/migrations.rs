@@ -30,12 +30,21 @@ const ADD_PROJECT_COMMAND_ORDER: &str = "CREATE TABLE IF NOT EXISTS project_comm
 CREATE INDEX IF NOT EXISTS idx_project_command_order_project
 ON project_command_order(project_id, sort_order);";
 
+const ADD_PROJECT_COMMAND_HIDDEN: &str = "CREATE TABLE IF NOT EXISTS project_command_hidden (
+    project_id TEXT NOT NULL,
+    command_template_id TEXT NOT NULL,
+    PRIMARY KEY (project_id, command_template_id),
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (command_template_id) REFERENCES command_templates(id) ON DELETE CASCADE
+);";
+
 pub fn run(connection: &mut Connection) -> Result<(), rusqlite_migration::Error> {
     let migrations = Migrations::new(vec![
         M::up(include_str!("schema.sql")),
         M::up(ADD_LIST_DIVIDERS),
         M::up(ADD_COMMAND_SCOPE_AND_TARGET),
         M::up(ADD_PROJECT_COMMAND_ORDER),
+        M::up(ADD_PROJECT_COMMAND_HIDDEN),
     ]);
 
     migrations.to_latest(connection)

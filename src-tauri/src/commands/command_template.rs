@@ -15,11 +15,15 @@ pub fn list_command_templates(
 ) -> Result<Vec<CommandTemplate>, String> {
     db.with_connection(|connection| {
         let mut statement = connection.prepare(
-            "SELECT ct.*
+            "SELECT ct.*,
+                    CASE WHEN pch.command_template_id IS NULL THEN 0 ELSE 1 END AS hidden
              FROM command_templates ct
              LEFT JOIN project_command_order pco
                ON pco.command_template_id = ct.id
                AND pco.project_id = :project_id
+             LEFT JOIN project_command_hidden pch
+               ON pch.command_template_id = ct.id
+               AND pch.project_id = :project_id
              WHERE ct.project_id IS NULL OR ct.project_id = :project_id
              ORDER BY
                CASE WHEN pco.sort_order IS NULL THEN 1 ELSE 0 END,
@@ -62,7 +66,7 @@ pub fn create_command_template(
 
         connection
             .query_row(
-                "SELECT * FROM command_templates WHERE id = :id",
+                "SELECT *, 0 AS hidden FROM command_templates WHERE id = :id",
                 named_params! { ":id": id },
                 command_template_from_row,
             )
@@ -97,7 +101,7 @@ pub fn update_command_template(
 
         connection
             .query_row(
-                "SELECT * FROM command_templates WHERE id = :id",
+                "SELECT *, 0 AS hidden FROM command_templates WHERE id = :id",
                 named_params! { ":id": id },
                 command_template_from_row,
             )
@@ -141,6 +145,40 @@ pub fn reorder_project_commands(
                     ":project_id": &project_id,
                     ":command_template_id": template_id,
                     ":sort_order": sort_order as i64,
+                },
+            )?;
+        }
+
+        Ok(())
+    })
+    .map_err(command_error)
+}
+
+#[tauri::command]
+pub fn set_project_command_hidden(
+    db: State<'_, Database>,
+    project_id: String,
+    command_template_id: String,
+    hidden: bool,
+) -> Result<(), String> {
+    db.with_connection(|connection| {
+        if hidden {
+            connection.execute(
+                "INSERT OR IGNORE INTO project_command_hidden
+                 (project_id, command_template_id)
+                 VALUES (:project_id, :command_template_id)",
+                named_params! {
+                    ":project_id": &project_id,
+                    ":command_template_id": &command_template_id,
+                },
+            )?;
+        } else {
+            connection.execute(
+                "DELETE FROM project_command_hidden
+                 WHERE project_id = :project_id AND command_template_id = :command_template_id",
+                named_params! {
+                    ":project_id": &project_id,
+                    ":command_template_id": &command_template_id,
                 },
             )?;
         }

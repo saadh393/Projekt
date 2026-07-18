@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { ArrowUpDown, Plus } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { ArrowUpDown, Eye, EyeOff, Plus } from "lucide-react";
 import {
   useCommandTemplateActions,
   useCommandTemplates,
@@ -17,22 +17,33 @@ type CommandManagerProps = {
 
 export function CommandManager({ projectId, title, onCommandRun }: CommandManagerProps) {
   const { data = [] } = useCommandTemplates(projectId);
-  const { reorderProjectCommands } = useCommandTemplateActions();
+  const { reorderProjectCommands, setProjectCommandHidden } = useCommandTemplateActions();
   const { runCommandTemplate } = useProjectActions();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isReordering, setReordering] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
 
-  const canReorder = projectId !== null && data.length > 1;
+  const hiddenCount = useMemo(
+    () => data.filter((template) => template.hidden).length,
+    [data],
+  );
+  const visibleCommands = showHidden ? data : data.filter((template) => !template.hidden);
+  const canReorder = projectId !== null && visibleCommands.length > 1;
 
   const moveItemBy = (index: number, delta: number) => {
     if (!projectId) return;
     const targetIndex = index + delta;
-    if (targetIndex < 0 || targetIndex >= data.length) return;
-    const reordered = moveItem(data, index, targetIndex);
+    if (targetIndex < 0 || targetIndex >= visibleCommands.length) return;
+    const reordered = moveItem(visibleCommands, index, targetIndex);
     reorderProjectCommands.mutate({
       projectId,
       templateIds: reordered.map((template) => template.id),
     });
+  };
+
+  const toggleHidden = (templateId: string, hidden: boolean) => {
+    if (!projectId) return;
+    setProjectCommandHidden.mutate({ projectId, templateId, hidden });
   };
 
   const runTemplate = (templateId: string) => {
@@ -70,10 +81,18 @@ export function CommandManager({ projectId, title, onCommandRun }: CommandManage
         </div>
       </div>
 
-      {data.length ? (
+      {data.length === 0 ? (
+        <div
+          className="rounded-[10px] border border-dashed px-3 py-3 text-center text-[12px]"
+          style={{ borderColor: "var(--border-strong)", color: "var(--text-tertiary)" }}
+        >
+          No commands
+        </div>
+      ) : visibleCommands.length ? (
         <div className="space-y-1.5">
-          {data.map((template, index) => {
+          {visibleCommands.map((template, index) => {
             const editable = projectId === null || template.projectId === projectId;
+            const inProject = projectId !== null;
             return (
               <CommandRow
                 key={template.id}
@@ -81,22 +100,30 @@ export function CommandManager({ projectId, title, onCommandRun }: CommandManage
                 editable={editable}
                 reordering={isReordering}
                 canMoveUp={index > 0}
-                canMoveDown={index < data.length - 1}
+                canMoveDown={index < visibleCommands.length - 1}
                 onMoveUp={() => moveItemBy(index, -1)}
                 onMoveDown={() => moveItemBy(index, 1)}
-                onRun={() => runTemplate(template.id)}
+                onToggleHidden={
+                  inProject ? () => toggleHidden(template.id, !template.hidden) : undefined
+                }
+                onRun={inProject ? () => runTemplate(template.id) : undefined}
               />
             );
           })}
         </div>
-      ) : (
-        <div
-          className="rounded-[10px] border border-dashed px-3 py-3 text-center text-[12px]"
-          style={{ borderColor: "var(--border-strong)", color: "var(--text-tertiary)" }}
+      ) : null}
+
+      {hiddenCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => setShowHidden((value) => !value)}
+          className="flex items-center gap-1.5 px-1 text-[11px] font-medium"
+          style={{ color: "var(--text-tertiary)" }}
         >
-          No commands
-        </div>
-      )}
+          {showHidden ? <EyeOff size={11} /> : <Eye size={11} />}
+          {showHidden ? "Hide hidden commands" : `Show ${hiddenCount} hidden`}
+        </button>
+      ) : null}
 
       <CreateCommandDialog
         open={isDialogOpen}

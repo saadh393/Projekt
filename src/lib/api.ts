@@ -74,6 +74,16 @@ export const api = {
   deleteCommandTemplate: (id: string) => call<void>("delete_command_template", { id }),
   reorderProjectCommands: (projectId: string, templateIds: string[]) =>
     call<void>("reorder_project_commands", { projectId, templateIds }),
+  setProjectCommandHidden: (
+    projectId: string,
+    templateId: string,
+    hidden: boolean,
+  ) =>
+    call<void>("set_project_command_hidden", {
+      projectId,
+      commandTemplateId: templateId,
+      hidden,
+    }),
 
   getProjectSortMode: () => call<SortMode>("get_project_sort_mode"),
   setProjectSortMode: (mode: SortMode) =>
