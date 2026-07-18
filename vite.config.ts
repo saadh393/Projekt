@@ -7,7 +7,7 @@ export default defineConfig({
   publicDir: "src/public",
   build: {
     rollupOptions: {
-      input: ["index.html", "app.html"],
+      input: ["index.html"],
     },
   },
   clearScreen: false,
