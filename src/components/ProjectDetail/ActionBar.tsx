@@ -11,15 +11,17 @@ type ActionBarProps = {
 const hardcodedActions = [
   { id: "finder", label: "Finder", icon: "/finder.svg" },
   { id: "vscode", label: "Code", icon: "/vscode.svg" },
+  { id: "antigravity", label: "Antigravity", icon: "/antigravity.svg" },
   { id: "terminal", label: "Terminal", icon: "/terminal.svg" },
 ] as const;
 
 export function ActionBar({ project, launchers }: ActionBarProps) {
-  const { openFinder, openVsCode, openTerminal, openWithLauncher } = useProjectActions();
+  const { openFinder, openVsCode, openAntigravity, openTerminal, openWithLauncher } = useProjectActions();
 
   const handlers: Record<(typeof hardcodedActions)[number]["id"], () => void> = {
     finder: () => openFinder.mutate(project.id),
     vscode: () => openVsCode.mutate(project.id),
+    antigravity: () => openAntigravity.mutate(project.id),
     terminal: () => openTerminal.mutate(project.id),
   };
 

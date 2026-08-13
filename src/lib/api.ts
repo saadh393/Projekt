@@ -35,6 +35,7 @@ export const api = {
   reorderProjects: (ids: string[]) => call<Project[]>("reorder_projects", { ids }),
   openFinder: (projectId: string) => call<void>("open_project_in_finder", { projectId }),
   openVsCode: (projectId: string) => call<void>("open_project_in_vscode", { projectId }),
+  openAntigravity: (projectId: string) => call<void>("open_project_in_antigravity", { projectId }),
   openTerminal: (projectId: string) => call<void>("open_project_in_terminal", { projectId }),
   runCommandTemplate: (projectId: string, templateId: string) =>
     call<CommandRunResult>("run_project_command_template", { projectId, templateId }),

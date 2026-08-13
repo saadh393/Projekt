@@ -10,6 +10,7 @@ import {
   Pencil,
   Terminal,
   Trash2,
+  Wand2,
 } from "lucide-react";
 import { findCategoryName } from "../../lib/categoryUtils";
 import { cx } from "../../lib/cx";
@@ -47,7 +48,7 @@ export function ProjectCard({
   const categoryName = findCategoryName(categories, project.categoryId);
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
   const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
-  const { hideProject, deleteProject, openFinder, openVsCode, openTerminal } = useProjectActions();
+  const { hideProject, deleteProject, openFinder, openVsCode, openAntigravity, openTerminal } = useProjectActions();
   const { position, open, close } = useContextMenu();
 
   const handleDelete = async () => {
@@ -80,6 +81,13 @@ export function ProjectCard({
         label: "Open in VS Code",
         icon: <Code2 size={14} />,
         onSelect: () => openVsCode.mutate(project.id),
+      },
+      {
+        kind: "action",
+        id: "antigravity",
+        label: "Open in Antigravity",
+        icon: <Wand2 size={14} />,
+        onSelect: () => openAntigravity.mutate(project.id),
       },
       {
         kind: "action",
@@ -117,6 +125,7 @@ export function ProjectCard({
       project.hidden,
       openFinder,
       openVsCode,
+      openAntigravity,
       openTerminal,
       hideProject,
       setEditingProjectId,

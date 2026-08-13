@@ -165,6 +165,17 @@ pub fn open_project_in_vscode(
 }
 
 #[tauri::command]
+pub fn open_project_in_antigravity(
+    app: AppHandle,
+    db: State<'_, Database>,
+    project_id: String,
+) -> Result<(), String> {
+    let path = project_path(&db, &project_id).map_err(command_error)?;
+    open_antigravity(&app, &path).map_err(command_error)?;
+    mark_opened(&db, &project_id).map_err(command_error)
+}
+
+#[tauri::command]
 pub fn open_project_in_terminal(
     app: AppHandle,
     db: State<'_, Database>,
@@ -321,6 +332,26 @@ fn open_vscode(app: &AppHandle, path: &str) -> anyhow::Result<()> {
     #[cfg(not(target_os = "macos"))]
     {
         return spawn(app, "code", vec![path.to_string()]);
+    }
+}
+
+fn open_antigravity(app: &AppHandle, path: &str) -> anyhow::Result<()> {
+    #[cfg(target_os = "macos")]
+    {
+        return spawn(
+            app,
+            "open",
+            vec![
+                "-a".to_string(),
+                "Antigravity IDE".to_string(),
+                path.to_string(),
+            ],
+        );
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        return spawn(app, "agy", vec![path.to_string()]);
     }
 }
 
