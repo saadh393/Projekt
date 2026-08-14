@@ -62,6 +62,7 @@ pub fn run() {
             commands::shell::list_available_shells,
             commands::shell::open_project_in_finder,
             commands::shell::open_project_in_vscode,
+            commands::shell::open_project_in_antigravity,
             commands::shell::open_project_in_terminal,
             commands::shell::launch_project_app,
             commands::terminal::run_project_command_template,

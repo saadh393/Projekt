@@ -57,6 +57,10 @@ export const useProjectActions = () => {
       mutationFn: (projectId: string) => api.openVsCode(projectId),
       onSuccess: invalidate,
     }),
+    openAntigravity: useMutation({
+      mutationFn: (projectId: string) => api.openAntigravity(projectId),
+      onSuccess: invalidate,
+    }),
     openTerminal: useMutation({
       mutationFn: (projectId: string) => api.openTerminal(projectId),
       onSuccess: invalidate,
