@@ -5,3 +5,14 @@ src-tauri/gen
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+
+.DS_Store
+
+.claude/
+.agents/
+skills-lock.json
+AGENT.md
+AGENTS.md
+CLAUDE.md
+BREIF.md
+UI-UX.md
