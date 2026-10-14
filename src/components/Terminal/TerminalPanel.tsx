@@ -1,7 +1,11 @@
 import { useRef } from "react";
 import { ChevronDown, Maximize2, Minimize2, OctagonX, X } from "lucide-react";
 import { api } from "../../lib/api";
-import { clampTerminalPanelHeight } from "../../lib/terminalPanel";
+import {
+  clampTerminalPanelHeight,
+  terminalPanelMinHeight,
+  workspaceReservedHeight,
+} from "../../lib/terminalPanel";
 import { terminalRuntime } from "../../lib/terminalRuntime";
 import { useTerminalStore } from "../../store/useTerminalStore";
 import { TerminalView } from "./TerminalView";
@@ -66,7 +70,7 @@ export function TerminalPanel() {
       ? 36
       : panelMode === "expanded"
         ? "calc(100vh - 28px)"
-        : panelHeight;
+        : `clamp(${terminalPanelMinHeight}px, ${panelHeight}px, calc(100vh - ${workspaceReservedHeight}px))`;
 
   return (
     <section

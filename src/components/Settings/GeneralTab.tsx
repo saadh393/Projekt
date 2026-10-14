@@ -1,10 +1,14 @@
-import { useSettings, useUpdateSettings } from "../../hooks/useSettings";
+import * as Switch from "@radix-ui/react-switch";
+import { useSettings, useUpdateRememberSession, useUpdateSettings } from "../../hooks/useSettings";
+import { useProjectUiStore } from "../../store/useProjectUiStore";
 import { shellLabels, terminalLabels } from "../../lib/constants";
 import type { ShellPreference, TerminalPreference } from "../../lib/types";
 
 export function GeneralTab() {
   const { data } = useSettings();
   const updateSettings = useUpdateSettings();
+  const rememberSession = useProjectUiStore((state) => state.rememberSession);
+  const updateRememberSession = useUpdateRememberSession();
   const preferredTerminal = data?.preferredTerminal ?? "terminal";
   const preferredShell = data?.preferredShell ?? data?.availableShells[0] ?? "zsh";
 
@@ -63,6 +67,30 @@ export function GeneralTab() {
           Used by commands configured for the inner terminal.
         </p>
       </label>
+
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <label
+            htmlFor="remember-session"
+            className="block text-[13px] font-medium"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Remember my last session
+          </label>
+          <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+            Reopen with the same category, project, sorting, and hidden-project view.
+          </p>
+        </div>
+        <Switch.Root
+          id="remember-session"
+          className="switch"
+          checked={rememberSession}
+          disabled={updateRememberSession.isPending}
+          onCheckedChange={(checked) => updateRememberSession.mutate(checked)}
+        >
+          <Switch.Thumb className="switch-thumb" />
+        </Switch.Root>
+      </div>
     </div>
   );
 }

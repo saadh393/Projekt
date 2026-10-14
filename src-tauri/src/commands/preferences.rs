@@ -1,117 +1,93 @@
-use rusqlite::{named_params, OptionalExtension};
-use serde::{Deserialize, Serialize};
+use rusqlite::{named_params, Connection, OptionalExtension};
+use serde::Serialize;
 use tauri::State;
 
 use crate::commands::command_error;
 use crate::db::Database;
 
-const PROJECT_SORT_MODE_KEY: &str = "project_sort_mode";
-const SHOW_HIDDEN_PROJECTS_KEY: &str = "show_hidden_projects";
+const UI_SESSION_KEY: &str = "ui_session";
+const REMEMBER_SESSION_KEY: &str = "remember_session";
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub enum ProjectSortMode {
-    Manual,
-    Name,
-    CreatedAt,
-    LastOpenedAt,
+pub struct UiSession {
+    pub remember: bool,
+    pub state: Option<String>,
 }
 
-impl ProjectSortMode {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Manual => "manual",
-            Self::Name => "name",
-            Self::CreatedAt => "createdAt",
-            Self::LastOpenedAt => "lastOpenedAt",
+#[tauri::command]
+pub fn get_ui_session(db: State<'_, Database>) -> Result<UiSession, String> {
+    db.with_connection(|connection| {
+        let remember = remember_session(connection)?;
+        let state = if remember {
+            read_preference(connection, UI_SESSION_KEY)?
+        } else {
+            None
+        };
+
+        Ok(UiSession { remember, state })
+    })
+    .map_err(command_error)
+}
+
+#[tauri::command]
+pub fn save_ui_session_state(db: State<'_, Database>, state: String) -> Result<(), String> {
+    db.with_connection(|connection| {
+        serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&state)
+            .map_err(|error| anyhow::anyhow!("session state must be a JSON object: {error}"))?;
+
+        if remember_session(connection)? {
+            write_preference(connection, UI_SESSION_KEY, &state)?;
         }
-    }
 
-    fn from_str(value: &str) -> Self {
-        match value {
-            "name" => Self::Name,
-            "createdAt" => Self::CreatedAt,
-            "manual" => Self::Manual,
-            _ => Self::LastOpenedAt,
+        Ok(())
+    })
+    .map_err(command_error)
+}
+
+#[tauri::command]
+pub fn set_remember_session(db: State<'_, Database>, remember: bool) -> Result<bool, String> {
+    db.with_transaction(|transaction| {
+        write_preference(
+            transaction,
+            REMEMBER_SESSION_KEY,
+            if remember { "1" } else { "0" },
+        )?;
+
+        if !remember {
+            transaction.execute(
+                "DELETE FROM preferences WHERE key = :key",
+                named_params! { ":key": UI_SESSION_KEY },
+            )?;
         }
-    }
-}
 
-impl Default for ProjectSortMode {
-    fn default() -> Self {
-        Self::LastOpenedAt
-    }
-}
-
-#[tauri::command]
-pub fn get_project_sort_mode(db: State<'_, Database>) -> Result<ProjectSortMode, String> {
-    db.with_connection(|connection| {
-        let value = connection
-            .query_row(
-                "SELECT value FROM preferences WHERE key = :key",
-                named_params! { ":key": PROJECT_SORT_MODE_KEY },
-                |row| row.get::<_, String>("value"),
-            )
-            .optional()?;
-        Ok(value
-            .as_deref()
-            .map(ProjectSortMode::from_str)
-            .unwrap_or_default())
+        Ok(remember)
     })
     .map_err(command_error)
 }
 
-#[tauri::command]
-pub fn set_project_sort_mode(
-    db: State<'_, Database>,
-    mode: ProjectSortMode,
-) -> Result<ProjectSortMode, String> {
-    db.with_connection(|connection| {
-        connection.execute(
-            "INSERT INTO preferences (key, value)
-             VALUES (:key, :value)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-            named_params! {
-                ":key": PROJECT_SORT_MODE_KEY,
-                ":value": mode.as_str(),
-            },
-        )?;
-        Ok(mode)
-    })
-    .map_err(command_error)
+fn remember_session(connection: &Connection) -> anyhow::Result<bool> {
+    Ok(read_preference(connection, REMEMBER_SESSION_KEY)?.as_deref() != Some("0"))
 }
 
-#[tauri::command]
-pub fn get_show_hidden_projects(db: State<'_, Database>) -> Result<bool, String> {
-    db.with_connection(|connection| {
-        let value = connection
-            .query_row(
-                "SELECT value FROM preferences WHERE key = :key",
-                named_params! { ":key": SHOW_HIDDEN_PROJECTS_KEY },
-                |row| row.get::<_, String>("value"),
-            )
-            .optional()?;
-        Ok(value.as_deref() == Some("1"))
-    })
-    .map_err(command_error)
+fn read_preference(connection: &Connection, key: &str) -> anyhow::Result<Option<String>> {
+    connection
+        .query_row(
+            "SELECT value FROM preferences WHERE key = :key",
+            named_params! { ":key": key },
+            |row| row.get::<_, String>("value"),
+        )
+        .optional()
+        .map_err(Into::into)
 }
 
-#[tauri::command]
-pub fn set_show_hidden_projects(
-    db: State<'_, Database>,
-    show: bool,
-) -> Result<bool, String> {
-    db.with_connection(|connection| {
-        connection.execute(
-            "INSERT INTO preferences (key, value)
-             VALUES (:key, :value)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-            named_params! {
-                ":key": SHOW_HIDDEN_PROJECTS_KEY,
-                ":value": if show { "1" } else { "0" },
-            },
-        )?;
-        Ok(show)
-    })
-    .map_err(command_error)
+fn write_preference(connection: &Connection, key: &str, value: &str) -> anyhow::Result<()> {
+    connection.execute(
+        "INSERT INTO preferences (key, value)
+         VALUES (:key, :value)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        named_params! { ":key": key, ":value": value },
+    )?;
+
+    Ok(())
 }

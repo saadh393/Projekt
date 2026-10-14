@@ -1,12 +1,14 @@
 import { ArrowUpDown, Check, FolderKanban, Settings } from "lucide-react";
 import { allProjectsCategoryId } from "../../lib/constants";
 import { countProjectsByCategory, visibleCategories } from "../../lib/categoryUtils";
-import { moveItem } from "../../lib/reorder";
+import { arrayMove } from "@dnd-kit/sortable";
 import { useCategoryActions } from "../../hooks/useCategories";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { Category, Project } from "../../lib/types";
 import { AddCategoryPopover } from "../Forms/AddCategoryPopover";
 import { CategoryItem } from "./CategoryItem";
+import { SortableList } from "../Sortable/SortableList";
+import { SortableRow } from "../Sortable/SortableRow";
 
 type SidebarProps = {
   categories: Category[];
@@ -31,16 +33,17 @@ export function Sidebar({ categories, projects }: SidebarProps) {
     setSelectedProjectId(null);
   };
 
-  const moveCategoryBy = (index: number, delta: number) => {
-    const targetIndex = index + delta;
-    if (targetIndex < 0 || targetIndex >= visible.length) return;
-    const reordered = moveItem(visible, index, targetIndex);
-    reorderCategories.mutate(reordered.map((category) => category.id));
+  const visibleIds = visible.map((category) => category.id);
+
+  const handleReorder = (activeId: string, overId: string) => {
+    reorderCategories.mutate(
+      arrayMove(visibleIds, visibleIds.indexOf(activeId), visibleIds.indexOf(overId)),
+    );
   };
 
   return (
     <aside
-      className="flex h-screen w-56 shrink-0 flex-col pt-7"
+      className="flex min-h-0 w-56 shrink-0 flex-col pt-7"
       style={{
         background: "var(--bg-sidebar)",
         backdropFilter: "saturate(180%) blur(24px)",
@@ -80,40 +83,48 @@ export function Sidebar({ categories, projects }: SidebarProps) {
         >
           Categories
         </span>
-        {categories.length > 1 ? (
+        {isReordering ? (
           <button
             type="button"
-            onClick={() => setReordering(!isReordering)}
-            className="btn-icon"
-            aria-label={isReordering ? "Finish reordering" : "Reorder categories"}
-            title={isReordering ? "Finish reordering" : "Reorder categories"}
-            style={{
-              background: isReordering ? "var(--accent-soft)" : undefined,
-              color: isReordering ? "var(--accent)" : undefined,
-            }}
+            onClick={() => setReordering(false)}
+            className="btn btn-primary"
           >
-            {isReordering ? <Check size={13} /> : <ArrowUpDown size={13} />}
+            <Check size={13} />
+            Done
           </button>
-        ) : null}
-        <AddCategoryPopover sortOrder={categories.length} />
+        ) : (
+          <>
+            {visible.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => setReordering(true)}
+                className="btn-icon"
+                aria-label="Reorder categories"
+                title="Reorder categories"
+              >
+                <ArrowUpDown size={13} />
+              </button>
+            ) : null}
+            <AddCategoryPopover sortOrder={categories.length} />
+          </>
+        )}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-2">
         {visible.length ? (
-          visible.map((category, index) => (
-            <CategoryItem
-              key={category.id}
-              category={category}
-              count={counts[category.id] ?? 0}
-              selected={selectedCategoryId === category.id}
-              reordering={isReordering}
-              canMoveUp={index > 0}
-              canMoveDown={index < visible.length - 1}
-              onSelect={() => handleSelectCategory(category.id)}
-              onMoveUp={() => moveCategoryBy(index, -1)}
-              onMoveDown={() => moveCategoryBy(index, 1)}
-            />
-          ))
+          <SortableList ids={visibleIds} onReorder={handleReorder}>
+            {visible.map((category) => (
+              <SortableRow key={category.id} id={category.id} disabled={!isReordering}>
+                <CategoryItem
+                  category={category}
+                  count={counts[category.id] ?? 0}
+                  selected={selectedCategoryId === category.id}
+                  reordering={isReordering}
+                  onSelect={() => handleSelectCategory(category.id)}
+                />
+              </SortableRow>
+            ))}
+          </SortableList>
         ) : (
           <div
             className="mx-1 mt-1 rounded-[8px] border border-dashed px-3 py-3 text-center text-[11px]"

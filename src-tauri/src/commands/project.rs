@@ -230,32 +230,6 @@ pub fn set_project_hidden(
 }
 
 #[tauri::command]
-pub fn reorder_projects(db: State<'_, Database>, ids: Vec<String>) -> Result<Vec<Project>, String> {
-    db.with_connection(|connection| {
-        for (sort_order, id) in ids.iter().enumerate() {
-            connection.execute(
-                "UPDATE projects SET sort_order = :sort_order, updated_at = :updated_at WHERE id = :id",
-                named_params! {
-                    ":id": id,
-                    ":sort_order": sort_order as i64,
-                    ":updated_at": now_timestamp(),
-                },
-            )?;
-        }
-
-        let mut statement =
-            connection.prepare("SELECT * FROM projects ORDER BY sort_order ASC, name COLLATE NOCASE ASC")?;
-        let mut projects = statement
-            .query_map([], project_from_row)?
-            .collect::<Result<Vec<_>, _>>()?;
-        attach_project_tags(connection, &mut projects)?;
-
-        Ok(projects)
-    })
-    .map_err(command_error)
-}
-
-#[tauri::command]
 pub fn delete_project(db: State<'_, Database>, id: String) -> Result<(), String> {
     db.with_connection(|connection| {
         connection.execute(

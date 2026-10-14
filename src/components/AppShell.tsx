@@ -11,7 +11,7 @@ import { useCategories } from "../hooks/useCategories";
 import { useDisableContextMenu } from "../hooks/useDisableContextMenu";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useLaunchers } from "../hooks/useLaunchers";
-import { usePreferencesHydration } from "../hooks/usePreferencesHydration";
+import { useStaleSelectionReset } from "../hooks/useStaleSelectionReset";
 import { useProjects } from "../hooks/useProjects";
 import { useTerminalEvents } from "../hooks/useTerminalEvents";
 import { useProjectUiStore } from "../store/useProjectUiStore";
@@ -26,7 +26,7 @@ export function AppShell() {
   useKeyboardShortcuts();
   useDisableContextMenu();
   useTerminalEvents();
-  usePreferencesHydration();
+  useStaleSelectionReset();
 
   const { data: projects = [] } = useProjects();
   const { data: categories = [] } = useCategories();

@@ -7,11 +7,19 @@ use crate::db::id::new_id;
 use crate::db::{now_timestamp, Database};
 use crate::models::divider::{divider_from_row, Divider, DividerInput};
 
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ListItemKind {
+    Project,
+    Divider,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ReorderItem {
-    pub kind: String,
+pub struct ListItemOrder {
+    pub kind: ListItemKind,
     pub id: String,
+    pub sort_order: i64,
 }
 
 #[tauri::command]
@@ -123,33 +131,32 @@ pub fn delete_divider(db: State<'_, Database>, id: String) -> Result<(), String>
 #[tauri::command]
 pub fn reorder_list_items(
     db: State<'_, Database>,
-    items: Vec<ReorderItem>,
+    items: Vec<ListItemOrder>,
 ) -> Result<(), String> {
-    db.with_connection(|connection| {
+    db.with_transaction(|transaction| {
         let updated_at = now_timestamp();
 
-        for (sort_order, item) in items.iter().enumerate() {
-            match item.kind.as_str() {
-                "project" => {
-                    connection.execute(
-                        "UPDATE projects SET sort_order = :sort_order, updated_at = :updated_at WHERE id = :id",
-                        named_params! {
-                            ":id": item.id,
-                            ":sort_order": sort_order as i64,
-                            ":updated_at": updated_at,
-                        },
-                    )?;
-                }
-                "divider" => {
-                    connection.execute(
-                        "UPDATE list_dividers SET sort_order = :sort_order WHERE id = :id",
-                        named_params! {
-                            ":id": item.id,
-                            ":sort_order": sort_order as i64,
-                        },
-                    )?;
-                }
-                _ => {}
+        for item in &items {
+            let changed = match item.kind {
+                ListItemKind::Project => transaction.execute(
+                    "UPDATE projects SET sort_order = :sort_order, updated_at = :updated_at WHERE id = :id",
+                    named_params! {
+                        ":id": item.id,
+                        ":sort_order": item.sort_order,
+                        ":updated_at": updated_at,
+                    },
+                )?,
+                ListItemKind::Divider => transaction.execute(
+                    "UPDATE list_dividers SET sort_order = :sort_order WHERE id = :id",
+                    named_params! {
+                        ":id": item.id,
+                        ":sort_order": item.sort_order,
+                    },
+                )?,
+            };
+
+            if changed == 0 {
+                anyhow::bail!("{:?} {} not found", item.kind, item.id);
             }
         }
 

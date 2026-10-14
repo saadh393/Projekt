@@ -1,4 +1,5 @@
-import type { Divider, ListItem, Project, ReorderItem } from "./types";
+import { arrayMove } from "@dnd-kit/sortable";
+import type { Divider, ListItem, ListItemOrder, Project } from "./types";
 
 export const mergeListItems = (projects: Project[], dividers: Divider[]): ListItem[] => {
   const items: ListItem[] = [
@@ -14,8 +15,22 @@ export const mergeListItems = (projects: Project[], dividers: Divider[]): ListIt
   });
 };
 
-export const toReorderItems = (items: ListItem[]): ReorderItem[] =>
-  items.map((entry) => ({ kind: entry.kind, id: entry.item.id }));
+export const sortOrdersAfterMove = (
+  items: ListItem[],
+  fromIndex: number,
+  toIndex: number,
+): ListItemOrder[] => {
+  const slots = items.map((entry) => entry.item.sortOrder).sort((a, b) => a - b);
+  for (let index = 1; index < slots.length; index++) {
+    slots[index] = Math.max(slots[index], slots[index - 1] + 1);
+  }
+
+  return arrayMove(items, fromIndex, toIndex).flatMap((entry, index) =>
+    entry.item.sortOrder === slots[index]
+      ? []
+      : [{ kind: entry.kind, id: entry.item.id, sortOrder: slots[index] }],
+  );
+};
 
 export const nextDividerSortOrder = (items: ListItem[]) => {
   if (!items.length) return 0;

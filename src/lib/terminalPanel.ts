@@ -1,2 +1,8 @@
+export const terminalPanelMinHeight = 180;
+export const workspaceReservedHeight = 240;
+
 export const clampTerminalPanelHeight = (height: number, viewportHeight: number) =>
-  Math.min(Math.max(height, 180), Math.max(180, viewportHeight - 120));
+  Math.min(
+    Math.max(height, terminalPanelMinHeight),
+    Math.max(terminalPanelMinHeight, viewportHeight - workspaceReservedHeight),
+  );

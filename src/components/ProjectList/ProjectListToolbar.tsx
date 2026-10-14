@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ArrowUpDown, Eye, EyeOff, Minus, Plus, Search } from "lucide-react";
+import { ArrowUpDown, Check, Eye, EyeOff, Minus, Plus, Search } from "lucide-react";
 import { sortLabels } from "../../lib/constants";
 import type { ContextMenuOption } from "../../lib/contextMenuTypes";
 import type { SortMode } from "../../lib/types";
@@ -10,11 +10,12 @@ type ProjectListToolbarProps = {
   sortMode: SortMode;
   showHiddenProjects: boolean;
   isReordering: boolean;
+  canReorder: boolean;
   canAddDivider: boolean;
   onSearchChange: (value: string) => void;
   onSortChange: (value: SortMode) => void;
   onShowHiddenChange: (value: boolean) => void;
-  onReorderToggle: (value: boolean) => void;
+  onReorderToggle: () => void;
   onAddDivider: () => void;
   onAddProject: () => void;
 }
@@ -24,6 +25,7 @@ export function ProjectListToolbar({
   sortMode,
   showHiddenProjects,
   isReordering,
+  canReorder,
   canAddDivider,
   onSearchChange,
   onSortChange,
@@ -34,14 +36,6 @@ export function ProjectListToolbar({
 }: ProjectListToolbarProps) {
   const overflowOptions = useMemo<ContextMenuOption[]>(
     () => [
-      {
-        kind: "action",
-        id: "reorder",
-        label: isReordering ? "Done Reordering" : "Reorder Items",
-        icon: <ArrowUpDown size={14} />,
-        checked: isReordering,
-        onSelect: () => onReorderToggle(!isReordering),
-      },
       {
         kind: "action",
         id: "hidden",
@@ -60,7 +54,7 @@ export function ProjectListToolbar({
         onSelect: onAddDivider,
       },
     ],
-    [isReordering, showHiddenProjects, canAddDivider, onReorderToggle, onShowHiddenChange, onAddDivider],
+    [showHiddenProjects, canAddDivider, onShowHiddenChange, onAddDivider],
   );
 
   return (
@@ -75,6 +69,7 @@ export function ProjectListToolbar({
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           className="field field-with-icon"
+          disabled={isReordering}
           placeholder="Search projects, tags, paths"
         />
       </label>
@@ -100,9 +95,32 @@ export function ProjectListToolbar({
         </span>
       </div>
 
-      <OverflowMenu options={overflowOptions} label="More options" />
+      {isReordering ? (
+        <button type="button" onClick={onReorderToggle} className="btn btn-primary">
+          <Check size={13} />
+          Done
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onReorderToggle}
+          className="btn"
+          disabled={!canReorder}
+          title="Drag and drop to reorder"
+        >
+          <ArrowUpDown size={13} />
+          Reorder
+        </button>
+      )}
 
-      <button type="button" onClick={onAddProject} className="btn btn-primary">
+      <OverflowMenu options={overflowOptions} label="More options" disabled={isReordering} />
+
+      <button
+        type="button"
+        onClick={onAddProject}
+        className="btn btn-primary"
+        disabled={isReordering}
+      >
         <Plus size={13} />
         New Project
       </button>

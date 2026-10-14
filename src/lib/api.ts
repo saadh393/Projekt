@@ -5,6 +5,7 @@ import type {
   CategoryDraft,
   CommandTemplate,
   CommandTemplateDraft,
+  CommandValues,
   CommandRunResult,
   Divider,
   DividerDraft,
@@ -12,10 +13,10 @@ import type {
   LauncherDraft,
   Project,
   ProjectDraft,
-  ReorderItem,
+  ListItemOrder,
   ShellPreference,
-  SortMode,
   TerminalPreference,
+  UiSession,
 } from "./types";
 
 const call = <T>(command: string, payload?: Record<string, unknown>) =>
@@ -32,7 +33,6 @@ export const api = {
   hideProject: (id: string, hidden: boolean) =>
     call<Project>("set_project_hidden", { id, hidden }),
   deleteProject: (id: string) => call<void>("delete_project", { id }),
-  reorderProjects: (ids: string[]) => call<Project[]>("reorder_projects", { ids }),
   openFinder: (projectId: string) => call<void>("open_project_in_finder", { projectId }),
   openVsCode: (projectId: string) => call<void>("open_project_in_vscode", { projectId }),
   openAntigravity: (projectId: string) => call<void>("open_project_in_antigravity", { projectId }),
@@ -63,7 +63,7 @@ export const api = {
   updateDivider: (id: string, divider: Partial<DividerDraft>) =>
     call<Divider>("update_divider", { id, input: divider }),
   deleteDivider: (id: string) => call<void>("delete_divider", { id }),
-  reorderListItems: (items: ReorderItem[]) =>
+  reorderListItems: (items: ListItemOrder[]) =>
     call<void>("reorder_list_items", { items }),
 
   listCommandTemplates: (projectId: string | null = null) =>
@@ -73,6 +73,18 @@ export const api = {
   updateCommandTemplate: (id: string, template: Partial<CommandTemplateDraft>) =>
     call<CommandTemplate>("update_command_template", { id, input: template }),
   deleteCommandTemplate: (id: string) => call<void>("delete_command_template", { id }),
+  linkGlobalCommands: (projectId: string, templateIds: string[]) =>
+    call<void>("link_global_commands", { projectId, templateIds }),
+  unlinkGlobalCommand: (projectId: string, templateId: string) =>
+    call<void>("unlink_global_command", { projectId, templateId }),
+  overrideProjectCommand: (projectId: string, templateId: string, values: CommandValues) =>
+    call<void>("override_project_command", {
+      projectId,
+      templateId,
+      input: { ...values, projectId },
+    }),
+  resetProjectCommandOverride: (projectId: string, templateId: string) =>
+    call<void>("reset_project_command_override", { projectId, templateId }),
   reorderProjectCommands: (projectId: string, templateIds: string[]) =>
     call<void>("reorder_project_commands", { projectId, templateIds }),
   setProjectCommandHidden: (
@@ -86,12 +98,10 @@ export const api = {
       hidden,
     }),
 
-  getProjectSortMode: () => call<SortMode>("get_project_sort_mode"),
-  setProjectSortMode: (mode: SortMode) =>
-    call<SortMode>("set_project_sort_mode", { mode }),
-  getShowHiddenProjects: () => call<boolean>("get_show_hidden_projects"),
-  setShowHiddenProjects: (show: boolean) =>
-    call<boolean>("set_show_hidden_projects", { show }),
+  getUiSession: () => call<UiSession>("get_ui_session"),
+  saveUiSessionState: (state: string) => call<void>("save_ui_session_state", { state }),
+  setRememberSession: (remember: boolean) =>
+    call<boolean>("set_remember_session", { remember }),
 
   writeTerminalSession: (sessionId: string, data: number[]) =>
     call<void>("write_terminal_session", { sessionId, data }),

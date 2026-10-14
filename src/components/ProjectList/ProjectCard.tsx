@@ -1,8 +1,6 @@
 import { useMemo, type MouseEvent } from "react";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import {
-  ChevronDown,
-  ChevronUp,
   Code2,
   Eye,
   EyeOff,
@@ -26,24 +24,14 @@ type ProjectCardProps = {
   project: Project;
   categories: Category[];
   selected: boolean;
-  reordering: boolean;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
   onSelect: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
 };
 
 export function ProjectCard({
   project,
   categories,
   selected,
-  reordering,
-  canMoveUp,
-  canMoveDown,
   onSelect,
-  onMoveUp,
-  onMoveDown,
 }: ProjectCardProps) {
   const categoryName = findCategoryName(categories, project.categoryId);
   const setEditingProjectId = useProjectUiStore((state) => state.setEditingProjectId);
@@ -141,11 +129,10 @@ export function ProjectCard({
     <div className={cx("relative group", project.hidden ? "opacity-60" : "")}>
       <button
         type="button"
-        onClick={reordering ? undefined : onSelect}
+        onClick={onSelect}
         onContextMenu={handleContextMenu}
         className="row"
         data-selected={selected}
-        style={reordering ? { paddingRight: 58 } : undefined}
       >
         <span className="dot" style={{ backgroundColor: project.color }} />
 
@@ -174,40 +161,15 @@ export function ProjectCard({
           </div>
         </div>
 
-        {!reordering ? (
-          <div className="row-meta flex shrink-0 items-center gap-1.5">
-            {project.tags.slice(0, 2).map((tag) => (
-              <span key={tag} className="chip">
-                {tag}
-              </span>
-            ))}
-            {categoryName ? <span className="chip">{categoryName}</span> : null}
-          </div>
-        ) : null}
-      </button>
-
-      {reordering ? (
-        <div className="reorder-controls">
-          <button
-            type="button"
-            onClick={onMoveUp}
-            disabled={!canMoveUp}
-            aria-label={`Move ${project.name} up`}
-            title="Move up"
-          >
-            <ChevronUp size={12} />
-          </button>
-          <button
-            type="button"
-            onClick={onMoveDown}
-            disabled={!canMoveDown}
-            aria-label={`Move ${project.name} down`}
-            title="Move down"
-          >
-            <ChevronDown size={12} />
-          </button>
+        <div className="row-meta flex shrink-0 items-center gap-1.5">
+          {project.tags.slice(0, 2).map((tag) => (
+            <span key={tag} className="chip">
+              {tag}
+            </span>
+          ))}
+          {categoryName ? <span className="chip">{categoryName}</span> : null}
         </div>
-      ) : null}
+      </button>
 
       <ContextMenu position={position} options={options} onClose={close} />
     </div>

@@ -29,7 +29,7 @@ export function ProjectDetail({
 
   const shell = embedded
     ? "flex h-full min-h-0 w-full flex-col"
-    : "scroll-shell hidden h-screen w-[360px] shrink-0 flex-col overflow-hidden border-l pt-7 lg:flex";
+    : "scroll-shell hidden min-h-0 w-[360px] shrink-0 flex-col overflow-hidden border-l pt-7 lg:flex";
 
   const shellStyle = embedded
     ? undefined

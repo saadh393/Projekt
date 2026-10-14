@@ -258,11 +258,10 @@ fn command_definition(
     db.with_connection(|connection| {
         connection
             .query_row(
-                "SELECT c.label, c.command, c.execution_target, p.name AS project_name, p.path
-                 FROM command_templates c
-                 JOIN projects p ON p.id = :project_id
-                 WHERE c.id = :template_id
-                 AND (c.project_id IS NULL OR c.project_id = :project_id)",
+                "SELECT pc.label, pc.command, pc.execution_target, p.name AS project_name, p.path
+                 FROM project_commands pc
+                 JOIN projects p ON p.id = pc.scope_project_id
+                 WHERE pc.scope_project_id = :project_id AND pc.id = :template_id",
                 named_params! {
                     ":project_id": project_id,
                     ":template_id": template_id,

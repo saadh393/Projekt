@@ -1,66 +1,45 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Check,
-  ChevronDown,
-  ChevronUp,
   Eye,
   EyeOff,
   Pencil,
   Play,
+  RotateCcw,
   Terminal,
   Trash2,
+  Unlink,
   X,
 } from "lucide-react";
-import { useCommandTemplateActions } from "../../hooks/useCommandTemplates";
 import { cx } from "../../lib/cx";
-import type {
-  CommandExecutionTarget,
-  CommandTemplate,
-} from "../../lib/types";
+import type { CommandExecutionTarget, CommandTemplate, CommandValues } from "../../lib/types";
 
 type CommandRowProps = {
   template: CommandTemplate;
-  editable: boolean;
-  reordering: boolean;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  onSave: (values: CommandValues) => Promise<unknown>;
+  onRemove: () => void;
+  onReset?: () => void;
   onToggleHidden?: () => void;
   onRun?: () => void;
 };
 
 export function CommandRow({
   template,
-  editable,
-  reordering,
-  canMoveUp,
-  canMoveDown,
-  onMoveUp,
-  onMoveDown,
+  onSave,
+  onRemove,
+  onReset,
   onToggleHidden,
   onRun,
 }: CommandRowProps) {
-  const { updateCommandTemplate, deleteCommandTemplate } = useCommandTemplateActions();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [label, setLabel] = useState(template.label);
   const [command, setCommand] = useState(template.command);
   const [executionTarget, setExecutionTarget] = useState<CommandExecutionTarget>(
     template.executionTarget,
   );
-
-  useEffect(() => {
-    if (!isEditing) {
-      setLabel(template.label);
-      setCommand(template.command);
-      setExecutionTarget(template.executionTarget);
-    }
-  }, [
-    template.label,
-    template.command,
-    template.executionTarget,
-    isEditing,
-  ]);
+  const canSave = Boolean(label.trim() && command.trim()) && !isSaving;
+  const removeLabel = template.inherited ? "Remove from project" : "Delete";
 
   const startEdit = () => {
     setLabel(template.label);
@@ -69,66 +48,16 @@ export function CommandRow({
     setIsEditing(true);
   };
 
-  const cancelEdit = () => setIsEditing(false);
+  const handleSave = () => {
+    if (!canSave) return;
+    setIsSaving(true);
+    onSave({ label: label.trim(), command: command.trim(), executionTarget })
+      .then(() => setIsEditing(false))
+      .catch((error) => console.error("Failed to save command", error))
+      .finally(() => setIsSaving(false));
+  };
 
-  const handleSave = () =>
-    updateCommandTemplate.mutate(
-      {
-        id: template.id,
-        template: {
-          label: label.trim(),
-          command: command.trim(),
-          projectId: template.projectId,
-          executionTarget,
-        },
-      },
-      { onSuccess: () => setIsEditing(false) },
-    );
-
-  const handleDelete = () => deleteCommandTemplate.mutate(template.id);
-
-  if (reordering) {
-    return (
-      <div
-        className="relative rounded-[10px] border bg-white p-2.5"
-        style={{ borderColor: "var(--border-subtle)", paddingRight: 58 }}
-      >
-        <div className="flex items-center gap-2">
-          <Terminal size={13} style={{ color: "var(--text-tertiary)" }} />
-          <span className="truncate text-[12px] font-medium">{template.label}</span>
-          {!template.projectId ? <span className="chip">Global</span> : null}
-        </div>
-        <div
-          className="truncate font-mono text-[11px]"
-          style={{ color: "var(--text-tertiary)" }}
-        >
-          {template.command}
-        </div>
-        <div className="reorder-controls">
-          <button
-            type="button"
-            onClick={onMoveUp}
-            disabled={!canMoveUp}
-            aria-label={`Move ${template.label} up`}
-            title="Move up"
-          >
-            <ChevronUp size={12} />
-          </button>
-          <button
-            type="button"
-            onClick={onMoveDown}
-            disabled={!canMoveDown}
-            aria-label={`Move ${template.label} down`}
-            title="Move down"
-          >
-            <ChevronDown size={12} />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isEditing && editable) {
+  if (isEditing) {
     return (
       <div
         className="rounded-[10px] border bg-white p-2.5"
@@ -140,15 +69,24 @@ export function CommandRow({
             <input
               value={label}
               onChange={(event) => setLabel(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && handleSave()}
               className="field flex-1"
+              aria-label="Command label"
               autoFocus
             />
           </div>
           <input
             value={command}
             onChange={(event) => setCommand(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && handleSave()}
             className="field field-mono"
+            aria-label="Command"
           />
+          {template.inherited ? (
+            <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              Changes apply to this project only. The global command stays unchanged.
+            </p>
+          ) : null}
           <div className="flex items-center gap-2">
             <select
               value={executionTarget}
@@ -164,28 +102,37 @@ export function CommandRow({
             <button
               type="button"
               onClick={handleSave}
+              disabled={!canSave}
               className="btn-icon"
               aria-label={`Save ${template.label}`}
+              title="Save"
               style={{ color: "#16a34a" }}
             >
               <Check size={13} />
             </button>
             <button
               type="button"
-              onClick={cancelEdit}
+              onClick={() => setIsEditing(false)}
               className="btn-icon"
               aria-label={`Cancel editing ${template.label}`}
+              title="Cancel"
             >
               <X size={13} />
             </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="btn-icon btn-destructive"
-              aria-label={`Delete ${template.label}`}
-            >
-              <Trash2 size={13} />
-            </button>
+            {template.overridden && onReset ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onReset();
+                  setIsEditing(false);
+                }}
+                className="btn-icon"
+                aria-label={`Reset ${template.label} to global`}
+                title="Reset to global"
+              >
+                <RotateCcw size={13} />
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -204,6 +151,7 @@ export function CommandRow({
         <div className="flex items-center gap-1.5">
           <span className="truncate text-[12px] font-medium">{template.label}</span>
           {!template.projectId ? <span className="chip">Global</span> : null}
+          {template.overridden ? <span className="chip">Edited</span> : null}
           <span className="chip">
             {template.executionTarget === "embedded" ? "Inner" : "OS"}
           </span>
@@ -226,17 +174,24 @@ export function CommandRow({
           {template.hidden ? <EyeOff size={13} /> : <Eye size={13} />}
         </button>
       ) : null}
-      {editable ? (
-        <button
-          type="button"
-          onClick={startEdit}
-          className="btn-icon"
-          aria-label={`Edit ${template.label}`}
-          title="Edit"
-        >
-          <Pencil size={13} />
-        </button>
-      ) : null}
+      <button
+        type="button"
+        onClick={startEdit}
+        className="btn-icon"
+        aria-label={`Edit ${template.label}`}
+        title="Edit"
+      >
+        <Pencil size={13} />
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="btn-icon btn-destructive"
+        aria-label={`${removeLabel} ${template.label}`}
+        title={removeLabel}
+      >
+        {template.inherited ? <Unlink size={13} /> : <Trash2 size={13} />}
+      </button>
       {onRun ? (
         <button
           type="button"

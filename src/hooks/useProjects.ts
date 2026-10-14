@@ -45,10 +45,6 @@ export const useProjectActions = () => {
       mutationFn: (id: string) => api.deleteProject(id),
       onSuccess: invalidate,
     }),
-    reorderProjects: useMutation({
-      mutationFn: (ids: string[]) => api.reorderProjects(ids),
-      onSuccess: invalidate,
-    }),
     openFinder: useMutation({
       mutationFn: (projectId: string) => api.openFinder(projectId),
       onSuccess: invalidate,

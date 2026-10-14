@@ -1,13 +1,14 @@
+import { useState } from "react";
 import { useDividerActions, useDividers } from "../../hooks/useDividers";
-import { useProjectActions } from "../../hooks/useProjects";
 import { allProjectsCategoryId } from "../../lib/constants";
 import { filterProjectsByQuery } from "../../lib/fuzzySearch";
-import { mergeListItems, nextDividerSortOrder, toReorderItems } from "../../lib/listItems";
+import { mergeListItems, nextDividerSortOrder, sortOrdersAfterMove } from "../../lib/listItems";
 import { projectsForCategory, sortProjects, visibleProjects } from "../../lib/projectSort";
-import { moveItem } from "../../lib/reorder";
 import { useProjectUiStore } from "../../store/useProjectUiStore";
 import type { Category, ListItem, Project } from "../../lib/types";
 import { EditDividerModal } from "../Forms/EditDividerModal";
+import { SortableList } from "../Sortable/SortableList";
+import { SortableRow } from "../Sortable/SortableRow";
 import { DividerRow } from "./DividerRow";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectListEmpty } from "./ProjectListEmpty";
@@ -30,9 +31,6 @@ export function ProjectList({ projects, categories }: ProjectListProps) {
   const setProjectSheetOpen = useProjectUiStore((state) => state.setProjectSheetOpen);
   const setSelectedProjectId = useProjectUiStore((state) => state.setSelectedProjectId);
   const setEditingDividerId = useProjectUiStore((state) => state.setEditingDividerId);
-  const isReordering = useProjectUiStore((state) => state.isReorderingProjects);
-  const setReordering = useProjectUiStore((state) => state.setReorderingProjects);
-  const { reorderProjects } = useProjectActions();
   const { data: dividers = [] } = useDividers(selectedCategoryId);
   const { createDivider, reorderListItems } = useDividerActions(selectedCategoryId);
 
@@ -43,23 +41,26 @@ export function ProjectList({ projects, categories }: ProjectListProps) {
   const activeCategory = categories.find((category) => category.id === selectedCategoryId);
   const heading = activeCategory ? activeCategory.name : "All Projects";
 
-  const dividersAreVisible = sortMode === "manual" && !searchQuery.trim();
-  const items: ListItem[] = dividersAreVisible
+  const [isReordering, setReordering] = useState(false);
+  const isManualOrder = sortMode === "manual" && !searchQuery.trim();
+  const items: ListItem[] = isManualOrder
     ? mergeListItems(sorted, dividers)
     : sorted.map((project) => ({ kind: "project", item: project }));
+  const itemKeys = items.map((entry) => `${entry.kind}-${entry.item.id}`);
 
-  const moveItemBy = (index: number, delta: number) => {
-    const targetIndex = index + delta;
-    if (targetIndex < 0 || targetIndex >= items.length) return;
-    const reordered = moveItem(items, index, targetIndex);
-    const containsDividers = reordered.some((entry) => entry.kind === "divider");
-
-    if (containsDividers) {
-      reorderListItems.mutate(toReorderItems(reordered));
-      return;
+  const handleReorder = (activeKey: string, overKey: string) => {
+    const orders = sortOrdersAfterMove(items, itemKeys.indexOf(activeKey), itemKeys.indexOf(overKey));
+    if (orders.length) {
+      reorderListItems.mutate(orders);
     }
+  };
 
-    reorderProjects.mutate(reordered.map((entry) => entry.item.id));
+  const handleReorderToggle = () => {
+    if (!isReordering) {
+      setSortMode("manual");
+      setSearchQuery("");
+    }
+    setReordering(!isReordering);
   };
 
   const handleAddDivider = () => {
@@ -76,7 +77,7 @@ export function ProjectList({ projects, categories }: ProjectListProps) {
 
   return (
     <main
-      className="scroll-shell flex h-screen min-w-0 flex-1 flex-col overflow-hidden pt-7"
+      className="scroll-shell flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-7"
       style={{ background: "var(--bg-content)" }}
     >
       <div className="flex items-end justify-between px-6 pt-2 pb-3">
@@ -95,11 +96,12 @@ export function ProjectList({ projects, categories }: ProjectListProps) {
         sortMode={sortMode}
         showHiddenProjects={showHiddenProjects}
         isReordering={isReordering}
-        canAddDivider={dividersAreVisible}
+        canReorder={items.length > 1}
+        canAddDivider={isManualOrder}
         onSearchChange={setSearchQuery}
         onSortChange={setSortMode}
         onShowHiddenChange={setShowHiddenProjects}
-        onReorderToggle={setReordering}
+        onReorderToggle={handleReorderToggle}
         onAddDivider={handleAddDivider}
         onAddProject={() => setProjectSheetOpen(true)}
       />
@@ -113,43 +115,31 @@ export function ProjectList({ projects, categories }: ProjectListProps) {
         }}
       >
         {items.length ? (
-          <div
-            className="list-stagger flex flex-col"
-            data-reordering={isReordering}
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                setSelectedProjectId(null);
-              }
-            }}
-          >
-            {items.map((entry, index) =>
-              entry.kind === "project" ? (
-                <ProjectCard
-                  key={`project-${entry.item.id}`}
-                  project={entry.item}
-                  categories={categories}
-                  selected={selectedProjectId === entry.item.id}
-                  reordering={isReordering}
-                  canMoveUp={index > 0}
-                  canMoveDown={index < items.length - 1}
-                  onSelect={() => setSelectedProjectId(entry.item.id)}
-                  onMoveUp={() => moveItemBy(index, -1)}
-                  onMoveDown={() => moveItemBy(index, 1)}
-                />
-              ) : (
-                <DividerRow
-                  key={`divider-${entry.item.id}`}
-                  divider={entry.item}
-                  categoryId={selectedCategoryId}
-                  reordering={isReordering}
-                  canMoveUp={index > 0}
-                  canMoveDown={index < items.length - 1}
-                  onMoveUp={() => moveItemBy(index, -1)}
-                  onMoveDown={() => moveItemBy(index, 1)}
-                />
-              ),
-            )}
-          </div>
+          <SortableList ids={itemKeys} onReorder={handleReorder}>
+            <div
+              className="list-stagger flex flex-col"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) {
+                  setSelectedProjectId(null);
+                }
+              }}
+            >
+              {items.map((entry, index) => (
+                <SortableRow key={itemKeys[index]} id={itemKeys[index]} disabled={!isReordering}>
+                  {entry.kind === "project" ? (
+                    <ProjectCard
+                      project={entry.item}
+                      categories={categories}
+                      selected={selectedProjectId === entry.item.id}
+                      onSelect={() => setSelectedProjectId(entry.item.id)}
+                    />
+                  ) : (
+                    <DividerRow divider={entry.item} categoryId={selectedCategoryId} />
+                  )}
+                </SortableRow>
+              ))}
+            </div>
+          </SortableList>
         ) : (
           <ProjectListEmpty onAddProject={() => setProjectSheetOpen(true)} />
         )}

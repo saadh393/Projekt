@@ -46,6 +46,14 @@ export type CommandTemplate = {
   projectId: EntityId | null;
   executionTarget: CommandExecutionTarget;
   hidden: boolean;
+  inherited: boolean;
+  overridden: boolean;
+};
+
+export type CommandValues = {
+  label: string;
+  command: string;
+  executionTarget: CommandExecutionTarget;
 };
 
 export type Divider = {
@@ -62,14 +70,20 @@ export type DividerDraft = {
   sortOrder?: number;
 };
 
-export type ReorderItem = {
+export type ListItemOrder = {
   kind: "project" | "divider";
   id: EntityId;
+  sortOrder: number;
 };
 
 export type ListItem =
   | { kind: "project"; item: Project }
   | { kind: "divider"; item: Divider };
+
+export type UiSession = {
+  remember: boolean;
+  state: string | null;
+};
 
 export type GeneralSettings = {
   preferredTerminal: TerminalPreference;

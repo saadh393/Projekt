@@ -33,6 +33,8 @@ pub struct CommandTemplate {
     pub project_id: Option<String>,
     pub execution_target: CommandExecutionTarget,
     pub hidden: bool,
+    pub inherited: bool,
+    pub overridden: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -54,5 +56,7 @@ pub fn command_template_from_row(row: &Row<'_>) -> rusqlite::Result<CommandTempl
             &row.get::<_, String>("execution_target")?,
         ),
         hidden: row.get::<_, i64>("hidden")? != 0,
+        inherited: row.get::<_, i64>("inherited")? != 0,
+        overridden: row.get::<_, i64>("overridden")? != 0,
     })
 }

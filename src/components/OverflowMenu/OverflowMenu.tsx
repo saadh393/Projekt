@@ -8,11 +8,12 @@ import { ContextMenuItem } from "../ContextMenu/ContextMenuItem";
 type OverflowMenuProps = {
   options: ContextMenuOption[];
   label?: string;
+  disabled?: boolean;
 };
 
 type Position = { top: number; left: number };
 
-export function OverflowMenu({ options, label = "More" }: OverflowMenuProps) {
+export function OverflowMenu({ options, label = "More", disabled = false }: OverflowMenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -57,6 +58,7 @@ export function OverflowMenu({ options, label = "More" }: OverflowMenuProps) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="btn"
+        disabled={disabled}
         aria-label={label}
         title={label}
         style={{ width: 36, padding: 0 }}
